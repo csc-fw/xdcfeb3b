@@ -1,0 +1,105 @@
+entity generated_ds4550 is
+
+generic (PHYSICAL_PIN_MAP : string := "TSSOP_20");
+
+port (TCK: in bit; TDI: in bit; TDO: out bit; TMS: in bit);
+
+use STD_1149_1_2001.all;
+attribute Component_Conformance of ds4550 : entity is "STD_1149_1_2001";
+
+attribute PIN_MAP of ds4550 : entity is PHYSICAL_PIN_MAP;
+
+constant TSSOP_20:PIN_MAP_STRING := 
+"A0 : 6," &
+"A1 : 7," &
+"A2 : 15," &
+"GND : 20," &
+"IO_0 : 1," &
+"IO_1 : 2," &
+"IO_2 : 3," &
+"IO_3 : 4," &
+"IO_4 : 5," &
+"IO_5 : 16," &
+"IO_6 : 17," &
+"IO_7 : 18," &
+"IO_8 : 19," &
+"SCL : 12," &
+"SDA : 11," &
+"TCK : 8," &
+"TDI : 13," &
+"TDO : 14," &
+"TMS : 9," &
+"VCC : 10";
+
+attribute Tap_Scan_In of TDI: signal is true;
+attribute Tap_Scan_Mode of TMS: signal is true;
+attribute Tap_Scan_Out of TDO: signal is true;
+attribute Tap_Scan_Clock of TCK: signal is (1.0e07, BOTH);
+
+attribute Instruction_Length of ds4550: entity is 4;
+attribute Instruction_Opcode of ds4550: entity is 
+	"SAMPLE (0010)," &
+	"PRELOAD (0010)," &
+	"BYPASS (1111)," &
+	"EXTEST (0000)," &
+	"CLAMP (0011)," &
+	"HIGHZ (0100)," &
+	"IDCODE (0001)," &
+	"ADDRESS (1001)," &
+	"READ (1010)," &
+	"WRITE (1011)";
+
+attribute Instruction_Capture of ds4550: entity is "XX01";
+
+attribute IDCODE_REGISTER of ds4550 : entity is
+	"XXXX" &	-- version
+	"0001000000000000" &	-- device ID
+	"00010100001" &	-- manufacturer
+	"1";		-- required by 1149.1
+
+-- Register Access Description
+
+attribute REGISTER_ACCESS of ds4550: entity is
+     "BYPASS (HIGHZ,BYPASS)," &
+	"DEVICE_ID (IDCODE)," &
+	"BOUNDARY (SAMPLE,PRELOAD,EXTEST)";
+
+
+attribute Boundary_Length of ds4550: entity is 33;
+
+attribute Boundary_Register of ds4550: entity is 
+	"  0 (BC_2, IO_0, input, X)," &
+	"  1 (BC_2, IO_0, output2, 0)," &
+	"  2 (BC_2, IO_0, output2, 1)," &
+	"  3 (BC_2, IO_1, input, X)," &
+	"  4 (BC_2, IO_1, output2, 0)," &
+	"  5 (BC_2, IO_1, output2, 1)," &
+	"  6 (BC_2, IO_2, input, X)," &
+	"  7 (BC_2, IO_2, output2, 0)," &
+	"  8 (BC_2, IO_2, output2, 1)," &
+	"  9 (BC_2, IO_3, input, X)," &
+	" 10 (BC_2, IO_3, output2, 0)," &
+	" 11 (BC_2, IO_3, output2, 1)," &
+	" 12 (BC_2, IO_4, input, X)," &
+	" 13 (BC_2, IO_4, output2, 0)," &
+	" 14 (BC_2, IO_4, output2, 1)," &
+	" 15 (BC_2, IO_5, input, X)," &
+	" 16 (BC_2, IO_5, output2, 0)," &
+	" 17 (BC_2, IO_5, output2, 1)," &
+	" 18 (BC_2, IO_6, input, X)," &
+	" 19 (BC_2, IO_6, output2, 0)," &
+	" 20 (BC_2, IO_6, output2, 1)," &
+	" 21 (BC_2, IO_7, input, X)," &
+	" 22 (BC_2, IO_7, output2, 0)," &
+	" 23 (BC_2, IO_7, output2, 1)," &
+	" 24 (BC_2, IO_8, input, X)," &
+	" 25 (BC_2, IO_8, output2, 0)," &
+	" 26 (BC_2, IO_8, output2, 1)," &
+	" 27 (BC_2, SDA, output2, 1)," &
+	" 28 (BC_2, SDA, input, X)," &
+	" 29 (BC_2, SCL, input, X)," &
+	" 30 (BC_2, A0, input, X)," &
+	" 31 (BC_2, A1, input, X)," &
+	" 32 (BC_2, A2, input, X)";
+
+end ds4550;
