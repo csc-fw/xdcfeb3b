@@ -52,6 +52,9 @@ module test_points(
 
 	input [7:0] I2C_RBK_FIFO_DATA, // Data read back from I2C device
 	input I2C_CLR_START,           // Clear the I2C_START instruction
+	 input FUNC75,
+	 input JSELECT2,
+	 input UPDT2,
 	 input BTCK1,
 	 input BTMS1,
 	 input BTDI1,
@@ -103,7 +106,7 @@ assign tp_b26_out = 2'b00;
 //assign tp_b35_out = {SYS_RST,RESYNC,4'h0,ALG_GD,CLK,1'b0,1'b0,1'b0,L1A_EVT_PUSH,L1A,L1A_MATCH};
 //assign tp_b35_out = {SLOW_FIFO_RST,SLOW_FIFO_RST_DONE,AL_START,AL_EXECUTE,2'b0,
 //							AUTO_LOAD,AUTO_LOAD_ENA,CLR_AL_DONE,AL_DONE,AL_BKY_WE,WRT_ON_RST,AL_BK_LD_MT,CLK1MHZ};
-assign tp_b35_out = {BTMS1,2'b0,BTCK1,2'b0,BTDI2,1'b0,I2C_CLR_START,I2C_RESET,I2C_START,I2C_RDENA,BTDI1,I2C_WE};
+assign tp_b35_out = {BTMS1,JSELECT2,UPDT2,BTCK1,2'b0,BTDI2,FUNC75,I2C_CLR_START,I2C_RESET,I2C_START,I2C_RDENA,BTDI1,I2C_WE};
 //
 // Incoming data to fabric
 //

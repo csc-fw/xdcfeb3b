@@ -190,6 +190,9 @@ module jtag_access #(
 	 output reg I2C_RDENA,            // Read enable for I2C Readback FIFO
 	 output I2C_RESET,                // Reset I2C FIFO
 	 output I2C_START,                // Start I2C processing
+	 output FUNC75,
+	 output JSELECT2,
+	 output UPDT2,
 	 output BTCK1,
 	 output BTMS1,
 	 output BTDI1,
@@ -426,7 +429,10 @@ module jtag_access #(
  assign BTMS1 = tms1;
  assign BTDI1 = tdi1;
  assign BTDI2 = tdi2;
- 
+ assign FUNC75 = f[75];
+ assign JSELECT2 = jsel2;
+ assign UPDT2 = update2;
+
    BSCAN_VIRTEX6 #(.DISABLE_JTAG("FALSE"),.JTAG_CHAIN(1))  // User 1 for instruction decodes
    BSCAN_user1 (
       .CAPTURE(capture1), // 1-bit output CAPTURE output from TAP controller
@@ -1641,8 +1647,7 @@ end
 //  76     | Read Byte from I2C readback FIFO (8 bits).
 //  77     | Read I2C status word from I2C interface (8 bits).
 //  78     | Reset I2C interface. -- Instruction only, (Auto reset)
-//  79     | Disable I2C processing. -- Instruction only, persisting
-//  80     | Enable I2C processing. -- Instruction only, persisting
+//  79     | Start I2C processing. -- Instruction only, persisting until new command or processing completed
 //
 // Function 75:
 //

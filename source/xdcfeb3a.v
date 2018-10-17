@@ -1984,6 +1984,10 @@ endgenerate
 	wire [23:0] sem_far_la;
 	wire [15:0] sem_errcnt;
 	wire [15:0] sem_status;
+
+	wire func75;
+	wire jselect2;
+	wire updt2;
 	wire btck1;
 	wire btms1;
 	wire btdi1;
@@ -2075,6 +2079,9 @@ endgenerate
 		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
 		.I2C_RESET(I2C_reset),                  // Reset I2C FIFO
 		.I2C_START(I2C_start),                  // Start I2C processing
+		.FUNC75(func75),
+		.JSELECT2(jselect2),
+		.UPDT2(updt2),
 		.BTCK1(btck1),
 		.BTMS1(btms1),
 		.BTDI1(btdi1),
@@ -2254,6 +2261,9 @@ endgenerate
 		.I2C_START(I2C_start),                 // Start I2C processing
 		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
 		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
+		.FUNC75(func75),
+		.JSELECT2(jselect2),
+		.UPDT2(updt2),
 		//
 		.BTCK1(btck1),
 		.BTMS1(btms1),
