@@ -91,6 +91,13 @@
 //  70     | Disable ECC Decoding for parameters readback of XCF08P PROM Clear the DECODE flag. -- Instruction only, persisting
 //  71     | Initiate transfer of parameters from XCF08P PROM to readback FIFO -- Instruction only,  (Auto reset)
 //  72     | Read word from XCF08P PROM readback FIFO (16 bits).
+//  73     | Enable  GBT Testing mode -- Instruction only, persisting 
+//  74     | Disable GBT Testing mode -- Instruction only, persisting  This is the default
+//  75     | Write Byte to I2C write FIFO (8 bits).
+//  76     | Read Byte from I2C readback FIFO (8 bits).
+//  77     | Read I2C status word from I2C interface (8 bits).
+//  78     | Reset I2C interface. -- Instruction only, (Auto reset)
+//  79     | Start I2C processing. -- Instruction only, persisting until new command or processing completed
 
 //
 // Revision: 
@@ -122,6 +129,9 @@ module jtag_access #(
 	 input CLR_AL_DONE,       // Clear Auto Load Done flag
 	 input AL_RESTART,        // Auto Load Restart aftter abort signal
 	 input LOAD_DFLT,         // Load defaults if no good parameters are found
+	 input [7:0] I2C_RBK_FIFO_DATA, // Data read back from I2C device
+	 input [7:0] I2C_STATUS,  // STATUS word for I2C interface
+	 input I2C_CLR_START,     // Clear the I2C_START instruction
 	 output reg AL_DONE,      // Auto load process complete
 	 output reg AL_ABORT,     // Auto load aborted due to bad first word
     output QP_RST_B,         // QPLL reset signal external connection
@@ -174,6 +184,12 @@ module jtag_access #(
 	 output reg CRC,
 	 output reg DECODE,
 	 output reg PF_RDENA,
+	 output reg GBT_ENA_TEST,
+	 output [7:0] I2C_WRT_FIFO_DATA,  // Data word for I2C write FIFO
+	 output reg I2C_WE,               // Write enable for I2C Write FIFO
+	 output reg I2C_RDENA,            // Read enable for I2C Readback FIFO
+	 output I2C_RESET,                // Reset I2C FIFO
+	 output I2C_START,                // Start I2C processing
 	 output BTCK1,
 	 output BTMS1,
 	 output BTDI1,
@@ -202,6 +218,7 @@ module jtag_access #(
    reg we,pre_we,pre_rd;
    reg we49,pre_we49;
 	reg pre_rd72;
+   reg we75,pre_we75,pre_rd76;
 	
 //
 // BSCAN signals
@@ -234,13 +251,13 @@ module jtag_access #(
 	wire mixclk;
 	
 
-	wire [79:0] f; //JTAG functions (one hot);
+	wire [95:0] f; //JTAG functions (one hot);
 	wire lxdlyout,prbout,dsy7,dmy2,dmy3,dmy4,dmy5,dmy6,dmy7,dmy8,dmy9,dmy10,dmy11,dmy12,dmy13,dmy14,dmy15,dmy16;
 	wire tdof2a3,tdof5,tdof6,tdof8,tdof9,tdofa,tdofc,tdofe,tdof10,tdof11,tdof14,tdof15;
 //	wire tdof16,tdof17,tdof18; // BPI register returns for DCFEBs 
 	wire tdof1c,tdof1d,tdof1e,tdof1f,tdof24,tdof25,tdof27,tdof2c,tdof2d,tdof31;
 	wire tdof32,tdof33,tdof34,tdof35,tdof37,tdof38,tdof39,tdof3a,tdof3b,tdof3c,tdof3d;
-	wire tdof48;
+	wire tdof48,tdof4b,tdof4c,tdof4d;
 	wire [31:16] status_h;
    wire [6:1] bky_mask;
 	wire [6:0] nsamp;
@@ -259,6 +276,8 @@ module jtag_access #(
 	reg set_crc, clr_crc;
 	reg f69dly, f70dly;
 	reg set_decode, clr_decode;
+	reg f73dly, f74dly;
+	reg set_gbt, clr_gbt;
 	reg [15:0] spi_rtn_reg;
 	wire [7:0] reg_sel_wrd;
 	reg [15:0] sel_reg;
@@ -311,6 +330,11 @@ module jtag_access #(
    reg f69_s1;
    reg f70_s1;
    reg f72_up2_s1;
+   reg f73_s1;
+   reg f74_s1;
+   reg f75_up2_s1;
+   reg f76_up2_s1;
+
    reg p_in_s2;
    reg f18_s2;
    reg f19_s2;
@@ -328,6 +352,10 @@ module jtag_access #(
    reg f69_s2;
    reg f70_s2;
    reg f72_up2_s2;
+   reg f73_s2;
+   reg f74_s2;
+   reg f75_up2_s2;
+   reg f76_up2_s2;
 
  
 	assign rst_qpll = f[54];
@@ -343,7 +371,7 @@ module jtag_access #(
 						tdof10 | tdof11 | tdof14 | tdof15 | tdof1c | tdof1d | tdof1e | tdof1f |
 						tdof24 | tdof25 | tdof27 | tdof2c | tdof2d |
 						tdof31 | tdof32 | tdof33 | tdof34 | tdof35 | tdof37 | tdof38 | tdof39 | tdof3a | tdof3b | tdof3c | tdof3d |
-						tdof48);
+						tdof48 | tdof4b | tdof4c | tdof4d);
 						
 	assign status_h[31:16] = {5'b10110,XL1DLYSET,LOADPBLK,COMP_TIME,COMP_MODE};
 	
@@ -360,8 +388,10 @@ module jtag_access #(
 	assign DAQ_OP_RST          = f[63];  // Reset DAQ optical link by toggling transmit disable
 	assign TRG_OP_RST          = f[64];  // Reset TRG optical link by toggling transmit disable
 	assign PROM2FF             = f[71];  // Initiate the transfer of parameters from the XCF08P PROM to the readback FIFO
-	assign p_in = f[1] | f[13] | f[15] | f[38] | f[47] | f[48] | f[62] | f[63] | f[64] | f[71];  // JTAG_SYS_RST, ADC_Init, Restart pipeline, and SEM JTAG commands are to be auto reset;
-	assign clrf = clr_pip[10] & p_in_s2; // auto reset functions last 11 25ns clocks then clear
+	assign I2C_RESET           = f[78];  // Reset I2C interface JTAG command
+	assign I2C_START           = f[79];  // Start I2C processing
+	assign p_in = f[1] | f[13] | f[15] | f[38] | f[47] | f[48] | f[62] | f[63] | f[64] | f[71] | f[78];  // JTAG_SYS_RST, ADC_Init, I2C_RESET, Restart pipeline, and SEM JTAG commands are to be auto reset;
+	assign clrf = (clr_pip[10] & p_in_s2) || I2C_CLR_START; // auto reset functions last 11 25ns clocks then clear
 	
 //
 //
@@ -480,6 +510,10 @@ module jtag_access #(
 		f69_s1 <= f[69];
 		f70_s1 <= f[70];
 		f72_up2_s1 <= f[72] & jsel2 & update2;
+		f73_s1 <= f[73];
+		f74_s1 <= f[74];
+		f75_up2_s1 <= f[75] & jsel2 & update2;
+		f76_up2_s1 <= f[76] & jsel2 & update2;
 		//
 	   p_in_s2 <= p_in_s1;
 		f18_s2 <= f18_s1;
@@ -498,6 +532,10 @@ module jtag_access #(
 		f69_s2 <= f69_s1;
 		f70_s2 <= f70_s1;
 		f72_up2_s2 <= f72_up2_s1;
+		f73_s2 <= f73_s1;
+		f74_s2 <= f74_s1;
+		f75_up2_s2 <= f75_up2_s1;
+		f76_up2_s2 <= f76_up2_s1;
 	end
 		
 //
@@ -1575,5 +1613,110 @@ end
 		 pre_rd72 <= f72_up2_s2;              // only at update2
 		 PF_RDENA <= f72_up2_s2 & ~pre_rd72;  // generate leading edge pulse one clock long
 	end
+
+
+//  73     | Enable  GBT Testing mode -- Instruction only, persisting 
+//  74     | Disable GBT Testing mode -- Instruction only, persisting  This is the default
+//
+// Function 73, 74:
+//
+//
+// GBT_ENA_TEST flag; Enables GBT loopback testing through the FPGA.
+//
+   always @(posedge CLK40) begin
+		 f73dly <= f73_s2;
+		 f74dly <= f74_s2;
+		 set_gbt <= f73_s2 & ~f73dly;  // leading edge of function being set (after update1)
+		 clr_gbt <= f74_s2 & ~f74dly;  // leading edge of function being set (after update1)
+		 if(set_gbt)
+			GBT_ENA_TEST <= 1'b1;
+		 else if(clr_gbt || RST)
+			GBT_ENA_TEST <= 1'b0;
+		 else
+			GBT_ENA_TEST <= GBT_ENA_TEST;
+	end
+		
+
+//  75     | Write Byte to I2C write FIFO (8 bits).
+//  76     | Read Byte from I2C readback FIFO (8 bits).
+//  77     | Read I2C status word from I2C interface (8 bits).
+//  78     | Reset I2C interface. -- Instruction only, (Auto reset)
+//  79     | Disable I2C processing. -- Instruction only, persisting
+//  80     | Enable I2C processing. -- Instruction only, persisting
+//
+// Function 75:
+//
+//
+// I2C interface FIFO Byte (8 bit word to be writting into the FIFO)
+// The write enable for the FIFO is generated automatically
+//
+   user_wr_reg #(.width(8), .def_value(8'h00), .TMR(TMR))
+   I2C_wrt_FIFO_Jreg(
+	   .TCK(tck2),         // TCK for update register
+      .DRCK(tck2),        // Data Reg Clock
+      .FSEL(f[75]),       // Function select
+      .SEL(jsel2),        // User 2 mode active
+      .TDI(tdi2),          // Serial Test Data In
+      .DSY_IN(1'b0),      // Serial Daisy chained data in
+      .SHIFT(jshift2),      // Shift state
+      .UPDATE(update2),    // Update state
+      .RST(not_eos),          // Reset default state
+      .DSY_CHAIN(1'b0),   // Daisy chain mode
+		.LOAD(1'b0),        // Load parallel input
+		.PI(8'h00),          // Parallel input
+      .PO(I2C_WRT_FIFO_DATA),       // Parallel output
+      .TDO(tdof4b),        // Serial Test Data Out
+      .DSY_OUT(dmy8));    // Daisy chained serial data out
+
+//
+// I2C Write enable for I2C write FIFO
+//
+   always @(posedge CLK40) begin
+		 pre_we75 <= f75_up2_s2;              // only at update2
+		 we75     <= ~f75_up2_s2 & pre_we75;  // generate tailing edge pulse one clock long
+		 I2C_WE <= we75;                      // delay write enable one clock cycle
+	end
+
+//
+// I2C Data readback  capture and shift from I2C_RBK_FIFO_DATA
+//
+   user_cap_reg #(.width(8))
+   I2C_rbk_FIFO_Jreg(
+      .DRCK(tck2),        // Data Reg Clock
+      .FSH(1'b0),         // Shift Function
+      .FCAP(f[76]),        // Capture Function
+      .SEL(jsel2),        // User 2 mode active
+      .TDI(tdi2),          // Serial Test Data In
+      .SHIFT(jshift2),      // Shift state
+      .CAPTURE(capture2),  // Capture state
+      .RST(not_eos),          // Reset default state
+		.BUS(I2C_RBK_FIFO_DATA), // Bus to capture
+      .TDO(tdof4c));      // Serial Test Data Out
+	
+//
+// Read enable for I2C readback data FIFO -- advance on each JTAG read.
+//
+   always @(posedge CLK40) begin
+		 pre_rd76 <= f76_up2_s2;               // only at update2
+		 I2C_RDENA <= f76_up2_s2 & ~pre_rd76;  // generate leading edge pulse one clock long
+	end
+		
+//
+// I2C status register capture and shift
+//
+   user_cap_reg #(.width(8))
+   I2C_status_Jreg(
+      .DRCK(tck2),        // Data Reg Clock
+      .FSH(1'b0),         // Shift Function
+      .FCAP(f[77]),        // Capture Function
+      .SEL(jsel2),        // User 2 mode active
+      .TDI(tdi2),          // Serial Test Data In
+      .SHIFT(jshift2),      // Shift state
+      .CAPTURE(capture2),  // Capture state
+      .RST(not_eos),          // Reset default state
+		.BUS(I2C_STATUS), // Bus to capture
+      .TDO(tdof4d));      // Serial Test Data Out
+		
+
 
 endmodule

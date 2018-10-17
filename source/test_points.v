@@ -44,6 +44,14 @@ module test_points(
 	 input L1A_EVT_PUSH,
 	 input ALG_GD,
 	 //
+	input [7:0] I2C_WRT_FIFO_DATA,  // Data word for I2C write FIFO
+	input I2C_WE,               // Write enable for I2C Write FIFO
+	input I2C_RDENA,            // Read enable for I2C Readback FIFO
+	input I2C_RESET,                // Reset I2C FIFO
+	input I2C_START,                // Start I2C processing
+
+	input [7:0] I2C_RBK_FIFO_DATA, // Data read back from I2C device
+	input I2C_CLR_START,           // Clear the I2C_START instruction
 	 input BTCK1,
 	 input BTMS1,
 	 input BTDI1,
@@ -86,14 +94,16 @@ assign tp_b35_dir = 14'h0300;
 //
 
 assign tp_b24_out = 3'b000;
-assign tp_b25_out = {DSR_ALGND,DSR_RST,ADC_CLK,CLK20,DSR_RESYNC,CLK,STUP_CLK,QPLL_LOCK,CLK100KHZ,RUN,SYS_RST,EOS,POR_STATE};
+//assign tp_b25_out = {DSR_ALGND,DSR_RST,ADC_CLK,CLK20,DSR_RESYNC,CLK,STUP_CLK,QPLL_LOCK,CLK100KHZ,RUN,SYS_RST,EOS,POR_STATE};
 //assign tp_b25_out = {cmp_phase[8:4],CLK,CMP_PHS_CHANGE,CMP_PHS_JTAG_RST,cmp_phs_busy,cmp_phs_psdone,cmp_phs_psen,cmp_phs_rst,SYS_RST,cmp_phs_state};
+assign tp_b25_out = {I2C_RBK_FIFO_DATA,I2C_WRT_FIFO_DATA};
 assign tp_b26_out = 2'b00;
 //assign tp_b35_out = {CMP_CLK_PHASE[4:1],2'b0,CMP_CLK_PHASE[0],COMP_RST,TRG_GTXTXRESET,TRG_MMCM_LOCK,TRG_SYNCDONE,COMP_CLK160,COMP_CLK80,COMP_CLK};
-assign tp_b35_out = {BTMS1,2'b0,BTCK1,2'b0,BTDI2,COMP_RST,TRG_GTXTXRESET,TRG_MMCM_LOCK,TRG_SYNCDONE,COMP_CLK160,BTDI1,COMP_CLK};
+//assign tp_b35_out = {BTMS1,2'b0,BTCK1,2'b0,BTDI2,COMP_RST,TRG_GTXTXRESET,TRG_MMCM_LOCK,TRG_SYNCDONE,COMP_CLK160,BTDI1,COMP_CLK};
 //assign tp_b35_out = {SYS_RST,RESYNC,4'h0,ALG_GD,CLK,1'b0,1'b0,1'b0,L1A_EVT_PUSH,L1A,L1A_MATCH};
 //assign tp_b35_out = {SLOW_FIFO_RST,SLOW_FIFO_RST_DONE,AL_START,AL_EXECUTE,2'b0,
 //							AUTO_LOAD,AUTO_LOAD_ENA,CLR_AL_DONE,AL_DONE,AL_BKY_WE,WRT_ON_RST,AL_BK_LD_MT,CLK1MHZ};
+assign tp_b35_out = {BTMS1,2'b0,BTCK1,2'b0,BTDI2,1'b0,I2C_CLR_START,I2C_RESET,I2C_START,I2C_RDENA,BTDI1,I2C_WE};
 //
 // Incoming data to fabric
 //

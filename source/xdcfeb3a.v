@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 (* syn_encoding = "safe original" *)
 module xdcfeb3a #(
+	parameter USE_I2C_CHIPSCOPE = 0,
 	parameter USE_PARAM_XFER_CHIPSCOPE = 1,
 	parameter USE_AUTO_LOAD_CHIPSCOPE = 0,
 	parameter USE_CHAN_LINK_CHIPSCOPE = 0,
@@ -40,7 +41,12 @@ module xdcfeb3a #(
 	output TP_B35_0N,TP_B35_0P,
 	
 	//GBTX ASIC signals
-	output GBT_TXVD,	//new for xdcfeb
+	input  GBT_RXRDY_FPGA,	      //new for xdcfeb_v3a
+	input  GBT_RXDATAVALID_FPGA,	//new for xdcfeb_v3a
+	output GBT_TXVD,	            //new for xdcfeb
+	output GBT_TEST_MODE,	      //new for xdcfeb_v3a
+	output [0:15] GBT_RTN_DATA_P, //new for xdcfeb_v3a
+	output [0:15] GBT_RTN_DATA_N, //new for xdcfeb_v3a
 
 	//Calibration signals
 	input \SKW_EXTPLS- ,\SKW_EXTPLS+ ,
@@ -58,13 +64,15 @@ module xdcfeb3a #(
 	output COMP_DAC_CS_LV_B,
 	
 	//I2C signals
-	inout DAQ_LDSDA,	//new for xdcfeb
-	inout TRG_LDSDA,	//new for xdcfeb
+	inout DAQ_LDSDA,	   //new for xdcfeb
+	input DAQ_LDSDA_RTN,	//new for xdcfeb_v3a
+	inout TRG_LDSDA,	   //new for xdcfeb
+	input TRG_LDSDA_RTN, //new for xdcfeb_v3a
 	inout NVIO_SDA_25,	//new for xdcfeb
 	output NVIO_I2C_EN,	//new for xdcfeb
 	output NVIO_SCL_25,	//new for xdcfeb
-	output DAQ_LDSCL,	//new for xdcfeb
-	output TRG_LDSCL,	//new for xdcfeb
+	output DAQ_LDSCL,   	//new for xdcfeb
+	output TRG_LDSCL,  	//new for xdcfeb
 	
    //PROM Configuration signals
    output  [15:0] CFG_DAT,
@@ -834,7 +842,8 @@ assign xcf08_man_al = 0;
  //  Startup Display for LEDs                                               //
  //                                                                         //
  /////////////////////////////////////////////////////////////////////////////
-
+wire gbt_ena_test;
+wire [15:0] gbt_data_in;
 	 
    startup_display #(
 		.TMR(TMR)
@@ -846,6 +855,9 @@ assign xcf08_man_al = 0;
 	// signals for LED'S after programing
 		.RUN(run),
 		.DCFEB_STATUS(dcfeb_status),
+		.GBT_ENA_TEST(gbt_ena_test),
+		 // internal outputs
+		.DATA_IN(gbt_data_in),
 	 // external connections
       .CFG_DAT(CFG_DAT)   // Data bus to/from BPI prom
 	);
@@ -859,7 +871,17 @@ assign xcf08_man_al = 0;
 
 	GBT_interface
 	GBT_intf1 (
-		.GBT_TXVD(GBT_TXVD)
+		//internal inputs
+		.GBT_ENA_TEST(gbt_ena_test),
+		.GBT_DATA_IN(gbt_data_in),
+		//external inputs
+		.GBT_RXRDY_FPGA(GBT_RXRDY_FPGA),
+		.GBT_RXDATAVALID_FPGA(GBT_RXDATAVALID_FPGA),
+		//external oputputs
+		.GBT_TXVD(GBT_TXVD),
+		.GBT_TEST_MODE(GBT_TEST_MODE),
+		.GBT_RTN_DATA_P(GBT_RTN_DATA_P),
+		.GBT_RTN_DATA_N(GBT_RTN_DATA_N)
 	);
 
  /////////////////////////////////////////////////////////////////////////////
@@ -1774,16 +1796,47 @@ SPI_PORT_i  (
 //  I2C Interface to Optical transmitters and non-volatile I/O             //
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
+wire [7:0] I2C_wrt_fifo_data;
+wire I2C_we;
+wire I2C_rdena;
+wire I2C_reset;
+wire I2C_start;
+wire I2C_clr_start;
+wire [7:0] I2C_rbk_fifo_data;
+wire [7:0] I2C_status;
 
-	I2C_interfaces
+	I2C_interfaces #(
+		.Simulation(Simulation),
+		.USE_CHIPSCOPE(USE_I2C_CHIPSCOPE)
+	) 
 	I2C_intf1 (
+		.CLK40(clk40),
+		.CLK1MHZ(clk1mhz),
+	   .RST(sys_rst),
+		
 		.DAQ_LDSDA(DAQ_LDSDA),
+		.DAQ_LDSDA_RTN(DAQ_LDSDA_RTN),
 		.DAQ_LDSCL(DAQ_LDSCL),
+		
 		.TRG_LDSDA(TRG_LDSDA),
+		.TRG_LDSDA_RTN(TRG_LDSDA_RTN),
 		.TRG_LDSCL(TRG_LDSCL),
+		
 		.NVIO_I2C_EN(NVIO_I2C_EN),
 		.NVIO_SDA_25(NVIO_SDA_25),
-		.NVIO_SCL_25(NVIO_SCL_25)
+		.NVIO_SCL_25(NVIO_SCL_25),
+		
+	// JTAG signals
+	// inputs
+		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data), // Data word for I2C write FIFO
+		.I2C_WE(I2C_we),                       // Write enable for I2C Write FIFO
+		.I2C_RDENA(I2C_rdena),                 // Read enable for I2C Readback FIFO
+		.I2C_RESET(I2C_reset),                 // Reset I2C FIFO
+		.I2C_START(I2C_start),                 // Start I2C processing
+	// outputs
+		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
+		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
+		.I2C_STATUS(I2C_status)                // STATUS word for I2C interface
 	);
 
 
@@ -1962,6 +2015,9 @@ endgenerate
 	   .CLR_AL_DONE(clr_al_done),  // Clear Auto Load Done flag
 	   .AL_RESTART(al_restart),    // Restart Auto Load process from PROM transfer
 	   .LOAD_DFLT(load_dflt),      // Load defaults if no good parameters are found
+	   .I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
+	   .I2C_STATUS(I2C_status),    // STATUS word for I2C interface
+	   .I2C_CLR_START(I2C_clr_start),// Clear the I2C_START instruction
 	   .AL_DONE(al_done),          // Auto load process complete
 	   .AL_ABORT(al_abort),        // Auto load aborted due to bad first word
 		
@@ -2013,6 +2069,12 @@ endgenerate
 		.CRC(xcf08_crc),
 		.DECODE(xcf08_decode),
 		.PF_RDENA(xcf08_pf_rdena),
+		.GBT_ENA_TEST(gbt_ena_test),
+		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data),  // Data word for I2C write FIFO
+		.I2C_WE(i2c_we),                        // Write enable for I2C Write FIFO
+		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
+		.I2C_RESET(I2C_reset),                  // Reset I2C FIFO
+		.I2C_START(I2C_start),                  // Start I2C processing
 		.BTCK1(btck1),
 		.BTMS1(btms1),
 		.BTDI1(btdi1),
@@ -2184,6 +2246,14 @@ endgenerate
 		.L1A_MATCH(l1a_match),
 		.L1A_EVT_PUSH(l1a_evt_push),
 		.ALG_GD(alg_gd),
+		//
+		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data), // Data word for I2C write FIFO
+		.I2C_WE(I2C_we),                       // Write enable for I2C Write FIFO
+		.I2C_RDENA(I2C_rdena),                 // Read enable for I2C Readback FIFO
+		.I2C_RESET(I2C_reset),                 // Reset I2C FIFO
+		.I2C_START(I2C_start),                 // Start I2C processing
+		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
+		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
 		//
 		.BTCK1(btck1),
 		.BTMS1(btms1),

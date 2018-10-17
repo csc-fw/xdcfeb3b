@@ -28,6 +28,9 @@ module startup_display #(
 	// signals for LED'S after programing
 	 input RUN,
 	 input [15:0] DCFEB_STATUS,
+	 input GBT_ENA_TEST,
+	 // internal outputs
+	 output [15:0] DATA_IN,
 	 // external connections
     output [15:0] CFG_DAT
     );
@@ -59,9 +62,10 @@ initial begin
 end
   
 
-//  IOBUF #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) IOBUF_CFG_DAT[15:0] (.O(DATA_IN),.IO(CFG_DAT),.I(data_out_i),.T(data_dir));
-  OBUF  #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) OBUF_CFG_DAT[15:0] (.O(CFG_DAT),.I(data_out_i));
+  IOBUF #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) IOBUF_CFG_DAT[15:0] (.O(DATA_IN),.IO(CFG_DAT),.I(data_out_i),.T(data_dir));
+//  OBUF  #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) OBUF_CFG_DAT[15:0] (.O(CFG_DAT),.I(data_out_i));
 
+assign data_dir = GBT_ENA_TEST ? 16'hFFFF : 16'h0000; // default is output.
 assign leds_out   = display ? {cycle[15][0],cycle[14][0],cycle[13][0],cycle[12][0],cycle[11][0],cycle[10][0],cycle[9][0],cycle[8][0],cycle[7][0],cycle[6][0],cycle[5][0],cycle[4][0],cycle[3][0],cycle[2][0],cycle[1][0],cycle[0][0]} : DCFEB_STATUS;  // can be assigned to user defined signals after programming
 assign duty_cycle = ram0[raddr];
 assign {dc[15],dc[14],dc[13],dc[12],dc[11],dc[10],dc[9],dc[8],dc[7],dc[6],dc[5],dc[4],dc[3],dc[2],dc[1],dc[0]} = duty_cycle;

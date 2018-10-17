@@ -19,9 +19,36 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module GBT_interface(
-    output GBT_TXVD
-    );
+	//internal inputs
+	input GBT_ENA_TEST,
+	input [15:0] GBT_DATA_IN,
+	//external inputs
+	input  GBT_RXRDY_FPGA,
+	input  GBT_RXDATAVALID_FPGA,
+	//external oputputs
+	output GBT_TXVD,
+	output GBT_TEST_MODE,
+	output [15:0] GBT_RTN_DATA_P,
+	output [15:0] GBT_RTN_DATA_N
+);
 
-  OBUF  #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) GBT_TX_VALID (.O(GBT_TXVD),.I(1'b0));
+wire [15:0] to_gbtx;
+wire rx_rdy;
+wire rxdatavalid;
+wire txdatavalid;
+wire txvd;
+//reg rxvd;
+
+
+
+	IBUF  #(.IBUF_LOW_PWR("TRUE"),.IOSTANDARD("DEFAULT"))    IBUF_GBT_RXRDY_FPGA  (.O(rx_rdy),.I(GBT_RXRDY_FPGA));
+	IBUF  #(.IBUF_LOW_PWR("TRUE"),.IOSTANDARD("DEFAULT"))    IBUF_GBT_RXDATAVALID_FPGA (.O(rxdatavalid),.I(GBT_RXDATAVALID_FPGA));
+	OBUF  #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) OBUF_GBT_TX_VALID (.O(GBT_TXVD),.I(txdatavalid));
+	OBUF  #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) OBUF_GBT_TEST_MODE (.O(GBT_TEST_MODE),.I(GBT_ENA_TEST));
+	OBUFDS #(.IOSTANDARD("DEFAULT")) OBUFDS_GBT_RTN_DATA[15:0] (.O(GBT_RTN_DATA_P),.OB(GBT_RTN_DATA_N),.I(to_gbtx));
+
+assign txdatavalid = GBT_ENA_TEST ? txvd : 1'b0;
+assign to_gbtx = GBT_DATA_IN;
+assign txvd = rxdatavalid && rx_rdy;
 
 endmodule
