@@ -2075,7 +2075,7 @@ endgenerate
 		.PF_RDENA(xcf08_pf_rdena),
 		.GBT_ENA_TEST(gbt_ena_test),
 		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data),  // Data word for I2C write FIFO
-		.I2C_WE(i2c_we),                        // Write enable for I2C Write FIFO
+		.I2C_WE(I2C_we),                        // Write enable for I2C Write FIFO
 		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
 		.I2C_RESET(I2C_reset),                  // Reset I2C FIFO
 		.I2C_START(I2C_start),                  // Start I2C processing
