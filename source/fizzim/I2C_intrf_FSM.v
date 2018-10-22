@@ -69,6 +69,7 @@ module I2C_intrf_FSM (
       I2C_Start    : if      (STEP3)                                      nextstate = Shift_Dev_Wr;
                      else                                                 nextstate = I2C_Start;
       I2C_Stop     : if      (STEP3)                                      nextstate = Wait;
+//      I2C_Stop     : if      (STEP4)                                      nextstate = Wait; //for simulation kludge
                      else                                                 nextstate = I2C_Stop;
       M_Ack_1      : if      (STEP3)                                      nextstate = Shift_Data_Rd;
                      else                                                 nextstate = M_Ack_1;

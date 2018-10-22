@@ -118,7 +118,10 @@ always @* begin
 	if(I2C_CLR_START) I2C_START = 1'b0;
 end
 
-I2C_slave_sim TRG_slave_i(
+I2C_slave_sim  #(
+	.Dev_Addr(8'hFC)
+) 
+TRG_slave_i(
 	.CLK40(CLK40),
 	.CLK1MHZ(CLK1MHZ),
 	.RST(RST),
@@ -126,7 +129,10 @@ I2C_slave_sim TRG_slave_i(
 	.SDA(TRG_LDSDA)
 );
 
-I2C_slave_sim DAQ_slave_i(
+I2C_slave_sim  #(
+	.Dev_Addr(8'hFC)
+) 
+DAQ_slave_i(
 	.CLK40(CLK40),
 	.CLK1MHZ(CLK1MHZ),
 	.RST(RST),
@@ -134,7 +140,10 @@ I2C_slave_sim DAQ_slave_i(
 	.SDA(DAQ_LDSDA)
 );
 
-I2C_slave_sim NVIO_slave_i(
+I2C_slave_sim  #(
+	.Dev_Addr(8'hA2)
+) 
+NVIO_slave_i(
 	.CLK40(CLK40),
 	.CLK1MHZ(CLK1MHZ),
 	.RST(RST),
