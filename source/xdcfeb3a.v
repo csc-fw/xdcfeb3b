@@ -8,7 +8,7 @@
 (* syn_encoding = "safe original" *)
 module xdcfeb3a #(
 	parameter USE_I2C_CHIPSCOPE = 0,
-	parameter USE_PARAM_XFER_CHIPSCOPE = 1,
+	parameter USE_PARAM_XFER_CHIPSCOPE = 0,
 	parameter USE_AUTO_LOAD_CHIPSCOPE = 0,
 	parameter USE_CHAN_LINK_CHIPSCOPE = 0,
 	parameter USE_DESER_CHIPSCOPE = 0,
@@ -2075,6 +2075,8 @@ endgenerate
 		.DECODE(xcf08_decode),
 		.PF_RDENA(xcf08_pf_rdena),
 		.GBT_ENA_TEST(gbt_ena_test),
+		.JTAG_GBT_PWR_ENA(jtag_gbt_pwr_ena),
+		.JTAG_GBT_PWR_DIS(jtag_gbt_pwr_dis),
 		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data),  // Data word for I2C write FIFO
 		.I2C_WE(I2C_we),                        // Write enable for I2C Write FIFO
 		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
