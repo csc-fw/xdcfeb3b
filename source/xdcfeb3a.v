@@ -38,7 +38,7 @@ module xdcfeb3a #(
 	input CMS_CLK_N,CMS_CLK_P,CMS80_N,CMS80_P,
 	input QPLL_CLK_AC_P,QPLL_CLK_AC_N,XO_CLK_AC_P,XO_CLK_AC_N,
 	input GC0N,GC0P,GC1N,GC1P,
-	output TP_B35_0N,TP_B35_0P,
+	input GBT_DSKW_CLK0N,GBT_DSKW_CLK0P,
 	
 	//GBTX ASIC signals
 	input  GBT_RXRDY_FPGA,	      //new for xdcfeb_v3a
@@ -148,6 +148,7 @@ module xdcfeb3a #(
 	input AV54P_5_CUR_N, AV54P_5_CUR_P,  // Names used on DCFEB Rev. 3b boards and in firmware version dcfeb_f3.0
 	
 	//Diagnostic & misc. signals: Logic analyzer and test piont ports
+	output V15GBT_ENA,
 	inout [2:0] TP_B24_,
 	inout [15:0] TP_B25_,
 	inout [1:0] TP_B26_,
@@ -602,6 +603,7 @@ endgenerate
 	wire clk160,clk120,clk40,clk20,clk1mhz;
 	wire mmcm_rst, daq_mmcm_lock;
 	wire strtup_clk, eos;
+	wire gbt_dskw_clk;
 	wire adc_clk;
 	wire dsr_resync;
 	wire resync;
@@ -643,7 +645,7 @@ endgenerate
 		.CMP_CLK_PHASE(cmp_clk_phase),    // Comparator Clock Phase 5 bits (0-31)
 		.SAMP_CLK_PHASE(samp_clk_phase),    // Comparator Clock Phase (0-15)
 		.SAMP_CLK_PHS_CHNG(samp_clk_phs_chng), // Sampling Clock Phase Change in progress; Reset deserializers.
-		.TP_B35_0N(TP_B35_0N), .TP_B35_0P(TP_B35_0P),                                  // Test point clock output
+		.GBT_DSKW_CLK0N(GBT_DSKW_CLK0N), .GBT_DSKW_CLK0P(GBT_DSKW_CLK0P),                                  // Test point clock output
 	   // Internal inputs
 		.RST(sys_rst),
 		.RESYNC(resync),
@@ -670,6 +672,7 @@ endgenerate
 		.DSR_RESYNC(dsr_resync),
 		.DAQ_MMCM_LOCK(daq_mmcm_lock),
 		.STRTUP_CLK(strtup_clk),           // internal config clock for power on state machines in reset manager
+		.GBT_DSKW_CLK(gbt_dskw_clk),
 		.EOS(eos),                          // End Of Startup
 		.CMP_PHS_ERRCNT(cmp_phs_errcnt),
 		.RESYNC_D1(resync_d1),
@@ -1907,6 +1910,8 @@ endgenerate
 	wire adc_init_rst;
 	wire jtag_sys_rst;
 	wire csp_sys_rst;
+	wire jtag_gbt_pwr_ena;
+	wire jtag_gbt_pwr_dis;
 	
 	assign adc_init = por_adc_init | jtag_adc_init | csp_adc_init;
 	assign icap_clk_ena = ~sys_rst;
@@ -1941,6 +1946,8 @@ endgenerate
 		.ADC_INIT_DONE(adc_init_done),
 		.DAQ_OP_RST(daq_op_rst),
 		.TRG_OP_RST(trg_op_rst),
+		.JTAG_GBT_PWR_ENA(jtag_gbt_pwr_ena),
+		.JTAG_GBT_PWR_DIS(jtag_gbt_pwr_dis),
 		
 		.ADC_INIT_RST(adc_init_rst),
 		.ADC_INIT(por_adc_init),
@@ -1961,6 +1968,7 @@ endgenerate
 		.QPLL_ERROR(qpll_error),
 		.DAQ_OP_TX_DISABLE(daq_op_tx_disable),
 		.TRG_OP_TX_DISABLE(trg_op_tx_disable),
+		.V15GBT_ENA(V15GBT_ENA),
 		.POR_STATE(por_state)
 	);
 
@@ -1985,13 +1993,6 @@ endgenerate
 	wire [15:0] sem_errcnt;
 	wire [15:0] sem_status;
 
-	wire func75;
-	wire jselect2;
-	wire updt2;
-	wire btck1;
-	wire btms1;
-	wire btdi1;
-	wire btdi2;
 	
 	
 	jtag_access  #(
@@ -2079,13 +2080,6 @@ endgenerate
 		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
 		.I2C_RESET(I2C_reset),                  // Reset I2C FIFO
 		.I2C_START(I2C_start),                  // Start I2C processing
-		.FUNC75(func75),
-		.JSELECT2(jselect2),
-		.UPDT2(updt2),
-		.BTCK1(btck1),
-		.BTMS1(btms1),
-		.BTDI1(btdi1),
-		.BTDI2(btdi2),
 // inputs
 		.SEM_FAR_PA(sem_far_pa),                //Frame Address Register - Physical Address
 		.SEM_FAR_LA(sem_far_la),                //Frame Address Register - Linear Address
@@ -2212,6 +2206,7 @@ endgenerate
 	tp_io_xdcfeb1 (
 		.CLK(clk40),
 		.STUP_CLK(strtup_clk),
+		.GBT_DSKW_CLK(gbt_dskw_clk),
 		.QPLL_LOCK(qpll_lock),
 		.DAQ_DATA_CLK(daq_data_clk),
 		.CMS80(cms80),
@@ -2261,14 +2256,7 @@ endgenerate
 		.I2C_START(I2C_start),                 // Start I2C processing
 		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
 		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
-		.FUNC75(func75),
-		.JSELECT2(jselect2),
-		.UPDT2(updt2),
 		//
-		.BTCK1(btck1),
-		.BTMS1(btms1),
-		.BTDI1(btdi1),
-		.BTDI2(btdi2),
 		//
 		.TP_B24_(TP_B24_),
 		.TP_B25_(TP_B25_),

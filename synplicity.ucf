@@ -177,15 +177,15 @@ TIMESPEC "TS_chipscope_with_param_xfer_CSP_param_xfer_cntrl_i_U0_iUPDATE_OUT" = 
 NET "chipscope_with_param_xfer.CSP_param_xfer_cntrl_i/U_BS/iDRCK_LOCAL" TNM_NET = "chipscope_with_param_xfer_CSP_param_xfer_cntrl_i_U_BS_iDRCK_LOCAL"; 
 TIMESPEC "TS_chipscope_with_param_xfer_CSP_param_xfer_cntrl_i_U_BS_iDRCK_LOCAL" = PERIOD "chipscope_with_param_xfer_CSP_param_xfer_cntrl_i_U_BS_iDRCK_LOCAL" 25.000 ns HIGH 50.00%; 
 
-# 1009 : define_clock n:jtag_acc_xdcfeb1.BTCK1 -name jtag_access|BTCK1_inferred_clock -period 25.000000 -clockgroup Inferred_clkgroup_8 -rise 0.000000 -fall 12.500000
-
-NET "jtag_acc_xdcfeb1/BTCK1_c" TNM_NET = "jtag_acc_xdcfeb1_BTCK1_c"; 
-TIMESPEC "TS_jtag_acc_xdcfeb1_BTCK1_c" = PERIOD "jtag_acc_xdcfeb1_BTCK1_c" 25.000 ns HIGH 50.00%; 
-
 # 1008 : define_clock n:jtag_acc_xdcfeb1.drck1 -name jtag_access|drck1_inferred_clock -period 25.000000 -clockgroup Inferred_clkgroup_7 -rise 0.000000 -fall 12.500000
 
 NET "jtag_acc_xdcfeb1/drck1" TNM_NET = "jtag_acc_xdcfeb1_drck1"; 
 TIMESPEC "TS_jtag_acc_xdcfeb1_drck1" = PERIOD "jtag_acc_xdcfeb1_drck1" 25.000 ns HIGH 50.00%; 
+
+# 1009 : define_clock n:jtag_acc_xdcfeb1.tck1 -name jtag_access|tck1_inferred_clock -period 25.000000 -clockgroup Inferred_clkgroup_8 -rise 0.000000 -fall 12.500000
+
+NET "jtag_acc_xdcfeb1/tck1_c" TNM_NET = "jtag_acc_xdcfeb1_tck1_c"; 
+TIMESPEC "TS_jtag_acc_xdcfeb1_tck1_c" = PERIOD "jtag_acc_xdcfeb1_tck1_c" 25.000 ns HIGH 50.00%; 
 
 # 1007 : define_clock n:jtag_acc_xdcfeb1.tck2_raw -name jtag_access|tck2_raw_inferred_clock -period 25.000000 -clockgroup Inferred_clkgroup_6 -rise 0.000000 -fall 12.500000
 
@@ -246,9 +246,9 @@ INST "calib_intf_i/Cal_logic_TMR.ext_pulse_r1_2" IOB=FALSE;
 INST "calib_intf_i/Cal_logic_TMR.ext_pulse_r1_1" IOB=FALSE;
 
 # I/O Registers Packing Constraints
-INST "rsm_xdcfeb1/RSTman_logic_TMR.qpll_lock_r1_2" IOB=FALSE;
 INST "rsm_xdcfeb1/RSTman_logic_TMR.qpll_lock_r1_1" IOB=FALSE;
 INST "rsm_xdcfeb1/RSTman_logic_TMR.qpll_lock_r1_3" IOB=FALSE;
+INST "rsm_xdcfeb1/RSTman_logic_TMR.qpll_lock_r1_2" IOB=FALSE;
 
 # I/O Registers Packing Constraints
 INST "jtag_acc_xdcfeb1/instr_dcd1/F_i[54]" IOB=FALSE;

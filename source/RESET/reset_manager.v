@@ -30,6 +30,9 @@ module reset_manager #(
 	 input ADC_INIT_DONE,
 	 input DAQ_OP_RST,
 	 input TRG_OP_RST,
+	 input JTAG_GBT_PWR_ENA,
+	 input JTAG_GBT_PWR_DIS,
+	 
 	 output ADC_INIT_RST,
 	 output ADC_INIT,
 	 output ADC_RDY,
@@ -49,6 +52,7 @@ module reset_manager #(
 	 output QPLL_ERROR,
 	 output DAQ_OP_TX_DISABLE,
 	 output TRG_OP_TX_DISABLE,
+	 output V15GBT_ENA,
 	 output [3:0] POR_STATE
     );
 
@@ -68,9 +72,11 @@ wire qpll_lock_r2_i;
 wire [11:0] dsr_tmr_i;
 
 wire strt_op_rst;
+reg  ena_gbt;
 
  IBUF IBUF_QP_ERROR (.O(QPLL_ERROR),.I(QP_ERROR));
  IBUF IBUF_QP_LOCKED (.O(QPLL_LOCK),.I(QP_LOCKED));
+ OBUF #(.DRIVE(12),.IOSTANDARD("DEFAULT"),.SLEW("SLOW")) OBUF_GBT_ENA (.O(V15GBT_ENA),.I(ena_gbt));
 
 assign restart_all = (JTAG_SYS_RST || CSP_SYS_RST);
 assign SLOW_FIFO_RST_DONE = slow_fifo_rst_done_i;
@@ -667,5 +673,19 @@ begin : RSTman_FSMs
 
 end
 endgenerate
+
+always @(posedge CLK or posedge SYS_RST) begin
+	if(SYS_RST) begin
+		ena_gbt <= 1'b1;
+	end
+	else
+		if (JTAG_GBT_PWR_ENA) begin
+			ena_gbt <= 1'b1;
+		end
+		else if (JTAG_GBT_PWR_DIS) begin
+			ena_gbt <= 1'b0;
+		end
+end
+
 
 endmodule

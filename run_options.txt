@@ -1,7 +1,7 @@
 #--  Synopsys, Inc.
 #--  Version N-2017.09-SP1
 #--  Project file F:\DCFEB\firmware\ISE_14.7\xdcfeb3a\run_options.txt
-#--  Written on Thu Oct 18 11:06:08 2018
+#--  Written on Wed Nov  7 17:46:25 2018
 
 
 #project files
@@ -102,8 +102,8 @@ add_file -verilog "../dcfeb3a/source/fizzim/tx_sync_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Trg_Clock_Strt_FSM_TMR.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Trg_Clock_Strt_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM_TMR_Err_Det.v"
-add_file -verilog "../dcfeb3a/ipcore_dir/adc_frame_clk.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM_TMR.v"
+add_file -verilog "../dcfeb3a/ipcore_dir/adc_frame_clk.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Startup_display_FSM_TMR.v"
 add_file -verilog "../dcfeb3a/ipcore_dir/trg_mmcm.v"
