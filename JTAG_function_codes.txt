@@ -1,0 +1,9 @@
+//  73     | Enable  GBT Testing mode -- Instruction only, persisting 
+//  74     | Disable GBT Testing mode -- Instruction only, persisting  This is the default
+//  75     | Enable power to GBT -- Instruction only, persisting  This is the default 
+//  76     | Disable power to GBT -- Instruction only, persisting
+//  77     | Write Byte to I2C write FIFO (8 bits).
+//  78     | Read Byte from I2C readback FIFO (8 bits).
+//  79     | Read I2C status word from I2C interface (8 bits).
+//  80     | Reset I2C interface. -- Instruction only, (Auto reset)
+//  81     | Start I2C processing. -- Instruction only, persisting until new command or processing completed

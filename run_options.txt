@@ -1,7 +1,7 @@
 #--  Synopsys, Inc.
 #--  Version N-2017.09-SP1
 #--  Project file F:\DCFEB\firmware\ISE_14.7\xdcfeb3a\run_options.txt
-#--  Written on Thu Nov  8 12:42:32 2018
+#--  Written on Tue Nov 13 12:43:35 2018
 
 
 #project files
@@ -62,6 +62,7 @@ add_file -xilinx "C:/ISE_core_gen/ipcore_dir/param_xfer_la.ngc"
 add_file -xilinx "source/PROM/param_fifo.ngc"
 add_file -xilinx "ipcore_dir/I2C_write_FIFO.ngc"
 add_file -xilinx "ipcore_dir/I2C_rbk_FIFO.ngc"
+add_file -xilinx "ipcore_dir/GBT_FIFO.ngc"
 add_file -verilog "source/PROM/ECC/wlteq2.v"
 add_file -verilog "source/PROM/ECC/wlteq3.v"
 add_file -verilog "source/PROM/ECC/s_plus_i.v"
@@ -87,9 +88,11 @@ add_file -verilog "source/fizzim/Prom_Xfer_FSM.v"
 add_file -verilog "source/fizzim/Pow_on_Rst_FSM_TMR.v"
 add_file -verilog "source/fizzim/Pow_on_Rst_FSM.v"
 add_file -verilog "source/fizzim/I2C_cmd_parser_FSM.v"
+add_file -verilog "source/fizzim/GBT_FIFO_readout_FSM.v"
 add_file -verilog "source/fizzim/Auto_Load_Param_FSM.v"
 add_file -verilog "ipcore_dir/I2C_write_FIFO.v"
 add_file -verilog "ipcore_dir/I2C_rbk_FIFO.v"
+add_file -verilog "ipcore_dir/GBT_FIFO.v"
 add_file -verilog "../dcfeb3a/source/TMB/PRBS_tx.v"
 add_file -verilog "../dcfeb3a/source/SEM/sem_core_sem_mon_fifo_TMR.v"
 add_file -verilog "../dcfeb3a/source/SEM/sem_core_sem_mon_fifo.v"
@@ -100,13 +103,13 @@ add_file -verilog "../dcfeb3a/source/JTAG/bky_shift.v"
 add_file -verilog "../dcfeb3a/source/fizzim/tx_sync_FSM_TMR.v"
 add_file -verilog "../dcfeb3a/source/fizzim/tx_sync_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Trg_Clock_Strt_FSM_TMR.v"
+add_file -verilog "../dcfeb3a/ipcore_dir/adc_frame_clk.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Trg_Clock_Strt_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM_TMR_Err_Det.v"
-add_file -verilog "../dcfeb3a/ipcore_dir/adc_frame_clk.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM_TMR.v"
+add_file -verilog "../dcfeb3a/ipcore_dir/trg_mmcm.v"
 add_file -verilog "../dcfeb3a/source/fizzim/transfer_samples_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Startup_display_FSM_TMR.v"
-add_file -verilog "../dcfeb3a/ipcore_dir/trg_mmcm.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Startup_display_FSM.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Sample_Proc_FSM_TMR_Err_Det.v"
 add_file -verilog "../dcfeb3a/source/fizzim/Sample_Proc_FSM_TMR.v"

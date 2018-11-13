@@ -38,7 +38,7 @@ module xdcfeb3a #(
 	input CMS_CLK_N,CMS_CLK_P,CMS80_N,CMS80_P,
 	input QPLL_CLK_AC_P,QPLL_CLK_AC_N,XO_CLK_AC_P,XO_CLK_AC_N,
 	input GC0N,GC0P,GC1N,GC1P,
-	input GBT_DSKW_CLK0N,GBT_DSKW_CLK0P,
+	input GBT_DSKW_CLK0N,GBT_DSKW_CLK0P, //new for xdcfeb_v3b
 	
 	//GBTX ASIC signals
 	input  GBT_RXRDY_FPGA,	      //new for xdcfeb_v3a
@@ -75,7 +75,7 @@ module xdcfeb3a #(
 	output TRG_LDSCL,  	//new for xdcfeb
 	
    //PROM Configuration signals
-   output  [15:0] CFG_DAT,
+   inout [15:0] CFG_DAT,
 	input [7:0] PARAM_DAT,	//new for xdcfeb
 	output PARAM_CLK,	//new for xdcfeb
 	output PARAM_CE_B,	//new for xdcfeb
@@ -865,7 +865,6 @@ wire [15:0] gbt_data_in;
       .CFG_DAT(CFG_DAT)   // Data bus to/from BPI prom
 	);
  
- 
  /////////////////////////////////////////////////////////////////////////////
  //                                                                         //
  //  GBTX interface                                                         //
@@ -875,6 +874,9 @@ wire [15:0] gbt_data_in;
 	GBT_interface
 	GBT_intf1 (
 		//internal inputs
+		.GBT_CLK(gbt_dskw_clk),
+		.CLK40(clk40),
+		.RST(sys_rst),
 		.GBT_ENA_TEST(gbt_ena_test),
 		.GBT_DATA_IN(gbt_data_in),
 		//external inputs

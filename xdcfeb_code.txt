@@ -1,0 +1,331 @@
+#define GBTX_TEST_ENABLE 73
+#define GBTX_TEST_DISABLE 74
+#define GBTX_POWER_ENABLE 75
+#define GBTX_POWER_DISABLE 76
+#define I2C_writeFIFO 77
+#define I2C_readFIFO 78
+#define I2C_status 79
+#define I2C_reset 80
+#define I2C_startfifo 81
+
+
+/* I2C Stuff
+#define I2C_writeFIFO 75
+#define I2C_readFIFO 76
+#define I2C_status 77
+#define I2C_reset 78
+#define I2C_startfifo 79
+
+CMD word:
+7654   3     210
+bytes r/wb   2 -trigger 1-daq 0-nonvolitileio
+
+FIFO Contents
+CMD word
+Address
+Data     (address increments)
+Data
+Data
+...
+
+
+*/
+
+void DCFEB::I2C_readfifo(int bytes,int rw,int device,char tobytes[20],char *readb){
+  int tofifo,tbytes,trw,i,j;
+  int nextra;
+  char tosend[32];
+  trw=(rw<<3)&0x08;
+  tbytes=(bytes<<4)&0xf0;
+  tofifo=tbytes+trw+device;
+  i=0;
+  tosend[0]=tofifo;
+  tosend[1]=tobytes[0];
+
+  //  i++;
+  //  for(j=0;j<bytes+1;j++){
+  //    tosend[i]=tobytes[j];
+  //    i++;
+  //  }
+  // reset fifo
+  DEVTYPE dv = dscamDevice();
+  cmd[0]=(VTX6_USR1&0xff);
+  cmd[1]=((VTX6_USR1&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=I2C_reset;
+  devdo(dv,n62,cmd,0,sndbuf,rcvbuf,0);
+  // write to fifo
+  //  for(int kk=0;kk<2*bytes;kk++){
+  for(int kk=0;kk<2;kk++){
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);  
+    sndbuf[0]=I2C_writeFIFO;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  // write to fifo
+    cmd[0]=(VTX6_USR2&0xff);
+    cmd[1]=((VTX6_USR2&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    printf(" write to fifo %d %02x\n",kk,tosend[kk]&0xff);
+    sndbuf[0]=tosend[kk]&0xFF;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  }
+  // enable fifo
+  cmd[0]=(VTX6_USR1&0xff);
+  cmd[1]=((VTX6_USR1&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=I2C_startfifo;
+  devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  sndbuf[0]=255;
+  sndbuf[1]=00;
+  devdo(dv,-99,sndbuf,0,sndbuf,rcvbuf,0);
+  // read fifo
+  //goto xxxx;
+  printf("i2c read fifo: ");
+  for(int kk=0;kk<bytes;kk++){
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);  
+    sndbuf[0]=I2C_readFIFO;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+    cmd[0]=(VTX6_USR2&0xff);
+    cmd[1]=((VTX6_USR2&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    sndbuf[0]=0xff;sndbuf[1]=0xff;sndbuf[1]=0xff;
+    rcvbuf[0]=0xff;rcvbuf[1]=0xff;rcvbuf[2]=0xff;
+    devdo(dv,n62,cmd,16+s62,sndbuf,rcvbuf,1);
+    readb[0]=rcvbuf[0]&0xff; 
+    printf("inside i2c_read_fifo: %02x %02x\n",rcvbuf[0]&0xFF,readb[0]&0xFF);
+  } 
+  printf("\n"); 
+  // bypass
+ xxxx:
+  cmd[0]=(VTX6_BYPASS&0xff);
+  cmd[1]=((VTX6_BYPASS&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=0;
+  devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+}
+
+void DCFEB::I2C_writefifo(int bytes,int rw,int device,char tobytes[20]){
+  int tofifo,tbytes,trw,i,j;
+  int nextra;
+  char tosend[32];
+  trw=(rw<<3)&0x08;
+  tbytes=(bytes<<4)&0xf0;
+  tofifo=tbytes+trw+device;
+  i=0;
+  tosend[i]=tofifo;
+  printf(" tosend %d %02x\n",i,tosend[0]&0xff);
+  i++;
+  //  for(j=0;j<2*bytes;j++){
+  for(j=0;j<bytes+1;j++){
+    tosend[i]=tobytes[j];
+    printf(" tosend %d %02x\n",i,tosend[i]&0xff);
+    i++;
+  }
+  // reset fifo
+  DEVTYPE dv = dscamDevice();
+  cmd[0]=(VTX6_USR1&0xff);
+  cmd[1]=((VTX6_USR1&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=I2C_reset;
+  devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  // disable fifo
+  //cmd[0]=(VTX6_USR1&0xff);
+  //cmd[1]=((VTX6_USR1&0x300)>>8);
+  //hwdevcmd(0,cmd,&nextra);  
+  //sndbuf[0]=I2C_disablefifo;
+  //devdo(dv,n62,cmd,0,sndbuf,rcvbuf,0);
+  // set write to fifo
+  //  for(int kk=0;kk<2*bytes+1;kk++){
+  for(int kk=0;kk<bytes+2;kk++){
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);  
+    sndbuf[0]=I2C_writeFIFO;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  // write to fifo
+    cmd[0]=(VTX6_USR2&0xff);
+    cmd[1]=((VTX6_USR2&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    printf(" write to fifo %d %02x\n",kk,tosend[kk]&0xff);
+    sndbuf[0]=tosend[kk]&0xFF;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  }
+  //enable fifo
+  cmd[0]=(VTX6_USR1&0xff);
+  cmd[1]=((VTX6_USR1&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=I2C_startfifo;
+  devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+  cmd[0]=(VTX6_BYPASS&0xff);
+  cmd[1]=((VTX6_BYPASS&0x300)>>8);
+  hwdevcmd(0,cmd,&nextra);  
+  sndbuf[0]=0;
+  devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+}
+
+void DCFEB::max_boardid_read_i2c(){
+  int bytes,rw,device;
+  char tobytes[20];
+  char readb[4];
+  bytes=1;
+  rw=1; // read
+  device=3; //max nonvolitile io
+  tobytes[0]=0xF5;
+  tobytes[1]=0x00;
+  tobytes[2]=0x00;
+  tobytes[3]=0x00;
+  I2C_readfifo(bytes,rw,device,tobytes,readb);
+}
+
+
+void DCFEB::max_boardid_write_i2c(){
+  int bytes,rw,device;
+  char tobytes[20];
+  bytes=3;
+  rw=0; // write
+  device=1; //max nonvolitile io
+  tobytes[0]=0xF5;
+  tobytes[1]=0x21; 
+  I2C_writefifo(bytes,rw,device,tobytes);
+  tobytes[1]=0x43;
+  I2C_writefifo(bytes,rw,device,tobytes);
+  tobytes[1]=0x65;
+  I2C_writefifo(bytes,rw,device,tobytes);
+}
+
+void DCFEB::max_io_write_i2c(int vio){
+  int bytes,rw,device;
+  char tobytes[20];
+  bytes=1;
+  rw=0; // write
+  device=1; //max nonvolitile io
+  tobytes[0]=0xF4;
+  tobytes[1]=0x00;
+  // I2C_writefifo(bytes,rw,device,tobytes);
+  tobytes[0]=0xF0;
+  tobytes[1]=vio;
+  I2C_writefifo(bytes,rw,device,tobytes);
+  tobytes[0]=0xF2;
+  tobytes[1]=0x00;
+  // I2C_writefifo(bytes,rw,device,tobytes);
+}
+
+void DCFEB::max_io_read_i2c(){
+  int bytes,rw,device;
+  char tobytes[20];
+  char readb[4];
+  bytes=1;
+  rw=1; // read
+  device=1; //max nonvolitile io
+  tobytes[0]=0xF0;
+  tobytes[1]=0x00;
+  tobytes[2]=0x00;
+  tobytes[3]=0x00;
+  I2C_readfifo(bytes,rw,device,tobytes,readb);
+}
+
+
+void DCFEB::max_io_test_signals_i2c(int ibit){
+  int vio;
+  int i;
+  vio=ibit;
+  //r(i=0;i<100;i++){
+    // if(i%2==0){vio=ibit;}else{vio=0;};
+    max_io_write_i2c(vio);
+    max_io_read_i2c();
+    usleep(200000);
+    fflush(stdout);
+    //
+}
+
+
+void DCFEB::Transciever_read_i2c(int dev){
+  int bytes,rw,device;
+  char tobytes[20];
+  char readb[4];
+  bytes=1;
+  rw=1; // read
+  device=dev; //transcievers
+  tobytes[0]=0x00; // Starting register address
+  tobytes[1]=0x00;
+  I2C_readfifo(bytes,rw,device,tobytes,readb);
+}
+
+
+void DCFEB::Transciever_write_i2c(int vio){
+  /* vio=0x84 lights on
+     vio=0x04 lights off */
+  int bytes,rw,device;
+  char tobytes[20];
+  bytes=1;
+  rw=0; // write
+  device=6; //transcievers
+  tobytes[0]=000;
+  tobytes[1]=vio;
+  I2C_writefifo(bytes,rw,device,tobytes);
+}
+
+// GBTX STUFF
+
+void DCFEB::GBTX_Power_ON(){
+    int nextra;
+    DEVTYPE dv = dscamDevice();
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);    
+    sndbuf[0]=GBTX_POWER_ENABLE;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+    cmd[0]=(VTX6_BYPASS&0xff);
+    cmd[1]=((VTX6_BYPASS&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    sndbuf[0]=0;
+    devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+} 
+
+void DCFEB::GBTX_Power_OFF(){
+    int nextra;
+    DEVTYPE dv = dscamDevice();
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);    
+    sndbuf[0]=GBTX_POWER_DISABLE;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+    cmd[0]=(VTX6_BYPASS&0xff);
+    cmd[1]=((VTX6_BYPASS&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    sndbuf[0]=0;
+    devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+} 
+
+void DCFEB::GBTX_Test_Enable(){
+    int nextra;
+    DEVTYPE dv = dscamDevice();
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);    
+    sndbuf[0]=GBTX_TEST_ENABLE;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+    cmd[0]=(VTX6_BYPASS&0xff);
+    cmd[1]=((VTX6_BYPASS&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    sndbuf[0]=0;
+    devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+} 
+
+void DCFEB::GBTX_Test_Disable(){
+    int nextra;
+    DEVTYPE dv = dscamDevice();
+    cmd[0]=(VTX6_USR1&0xff);
+    cmd[1]=((VTX6_USR1&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);    
+    sndbuf[0]=GBTX_TEST_DISABLE;
+    devdo(dv,n62,cmd,8+s62,sndbuf,rcvbuf,0);
+    cmd[0]=(VTX6_BYPASS&0xff);
+    cmd[1]=((VTX6_BYPASS&0x300)>>8);
+    hwdevcmd(0,cmd,&nextra);
+    sndbuf[0]=0;
+    devdo(dv,n62,cmd,0,sndbuf,rcvbuf,2);
+} 
