@@ -20,6 +20,7 @@ ipcore_dir/tmp/
 isim/
 planAhead_*
 isim/
+PROM/
 *.tlg
 *.szr
 *.prs
@@ -78,6 +79,7 @@ isim/
 *.mcs
 *.cfi
 *.prm
+*.sig
 *.msd
 *.msk
 *.rba

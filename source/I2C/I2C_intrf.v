@@ -37,6 +37,7 @@ module I2C_intrf #(
 	//Outputs
 	output READY,
 	output RBK_WE,
+	output reg S_NACK,
 //	output reg TRISTATE_SDA,
 	output reg [7:0] RBK_DATA,
 	output reg SCL,
@@ -257,6 +258,19 @@ always @(posedge CLK1MHZ or posedge RST) begin
 	else begin
 		if(shift_data && I2C_read && step3[2]) begin
 			RBK_DATA <= {RBK_DATA[6:0],RTN_DATA};
+		end
+	end
+end
+always @(posedge CLK1MHZ or posedge RST) begin
+	if(RST) begin
+		S_NACK <= 1'b0;
+	end
+	else begin
+		if(start) begin
+			S_NACK <= 1'b0;
+		end
+		if(slave_ack && step3[0]) begin
+			S_NACK <= RTN_DATA;
 		end
 	end
 end

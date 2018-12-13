@@ -130,6 +130,13 @@ wire daq_ready;
 wire trg_ready;
 wire nvio_ready;
 
+wire daq_s_nack;
+wire trg_s_nack;
+wire nvio_s_nack;
+reg  daq_nack_err;
+reg  trg_nack_err;
+reg  nvio_nack_err;
+
 reg  trg_sel;
 reg  daq_sel;
 reg  nvio_sel;
@@ -140,6 +147,8 @@ assign rbk_data  =  daq_sel ? daq_rbk_data : (trg_sel ? trg_rbk_data : (nvio_sel
 assign rbk_we    =  daq_sel ? daq_rbk_we   : (trg_sel ? trg_rbk_we   : (nvio_sel ? nvio_rbk_we   : 1'b0));
 
 assign rst_fifo = RST || I2C_RESET;
+
+assign I2C_STATUS ={wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err};
 
 generate
 if(Simulation==1)
@@ -322,6 +331,7 @@ I2C_TRG_LD_i  (
 	//Outputs
 	.READY(trg_ready),
 	.RBK_WE(trg_rbk_we),
+	.S_NACK(trg_s_nack),
 	.RBK_DATA(trg_rbk_data),
 //	.TRISTATE_SDA(trg_tristate_sda),
 	.SCL(trg_ldscl_out),
@@ -352,6 +362,7 @@ I2C_DAQ_LD_i  (
 	//Outputs
 	.READY(daq_ready),
 	.RBK_WE(daq_rbk_we),
+	.S_NACK(daq_s_nack),
 	.RBK_DATA(daq_rbk_data),
 //	.TRISTATE_SDA(daq_tristate_sda),
 	.SCL(daq_ldscl_out),
@@ -383,10 +394,39 @@ I2C_NVIO_i  (
 	//Outputs
 	.READY(nvio_ready),
 	.RBK_WE(nvio_rbk_we),
+	.S_NACK(nvio_s_nack),
 	.RBK_DATA(nvio_rbk_data),
 //	.TRISTATE_SDA(nvio_tristate_sda),
 	.SCL(nvio_scl_25_out),
 	.SDA(nvio_sda_25_out)
 );
+
+always @(posedge CLK40 or posedge RST) begin
+	if(RST) begin
+		daq_nack_err  <= 1'b0;
+		trg_nack_err  <= 1'b0;
+		nvio_nack_err <= 1'b0;
+	end
+	else begin
+		if(execute && daq_sel) begin
+			daq_nack_err <= 1'b0;
+		end
+		else if(daq_s_nack) begin
+			daq_nack_err <= 1'b1;
+		end
+		if(execute && trg_sel) begin
+			trg_nack_err <= 1'b0;
+		end
+		if(trg_s_nack) begin
+			trg_nack_err <= 1'b1;
+		end
+		if(execute && nvio_sel) begin
+			nvio_nack_err <= 1'b0;
+		end
+		if(nvio_s_nack) begin
+			nvio_nack_err <= 1'b1;
+		end
+	end
+end
 
 endmodule

@@ -1,0 +1,17 @@
+# Output products list for <CSP_param_xfer_cntrl>
+CSP_param_xfer_cntrl.asy
+CSP_param_xfer_cntrl.constraints\CSP_param_xfer_cntrl.ucf
+CSP_param_xfer_cntrl.constraints\CSP_param_xfer_cntrl.xdc
+CSP_param_xfer_cntrl.gise
+CSP_param_xfer_cntrl.ngc
+CSP_param_xfer_cntrl.sym
+CSP_param_xfer_cntrl.ucf
+CSP_param_xfer_cntrl.v
+CSP_param_xfer_cntrl.veo
+CSP_param_xfer_cntrl.xco
+CSP_param_xfer_cntrl.xdc
+CSP_param_xfer_cntrl.xise
+CSP_param_xfer_cntrl_flist.txt
+CSP_param_xfer_cntrl_readme.txt
+CSP_param_xfer_cntrl_xmdf.tcl
+_xmsgs\pn_parser.xmsgs

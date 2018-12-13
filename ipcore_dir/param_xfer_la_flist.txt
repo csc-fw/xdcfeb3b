@@ -1,0 +1,19 @@
+# Output products list for <param_xfer_la>
+_xmsgs\pn_parser.xmsgs
+param_xfer_la.asy
+param_xfer_la.cdc
+param_xfer_la.constraints\param_xfer_la.ucf
+param_xfer_la.constraints\param_xfer_la.xdc
+param_xfer_la.gise
+param_xfer_la.ncf
+param_xfer_la.ngc
+param_xfer_la.sym
+param_xfer_la.ucf
+param_xfer_la.v
+param_xfer_la.veo
+param_xfer_la.xco
+param_xfer_la.xdc
+param_xfer_la.xise
+param_xfer_la_flist.txt
+param_xfer_la_readme.txt
+param_xfer_la_xmdf.tcl

@@ -1,5 +1,5 @@
 
-// Created by fizzim_tmr.pl version $Revision: 4.44 on 2018:09:27 at 16:48:32 (www.fizzim.com)
+// Created by fizzim_tmr.pl version $Revision: 4.44 on 2018:12:04 at 12:37:11 (www.fizzim.com)
 
 module I2C_intrf_FSM (
   output reg INCR,
@@ -17,7 +17,7 @@ module I2C_intrf_FSM (
   output reg START,
   output reg STOP,
   output reg S_ACK,
-  output wire [4:0] I2C_STATE,
+  output wire [3:0] I2C_STATE,
   input CLK,
   input EXECUTE,
   input LAST_BYTE,
@@ -30,36 +30,35 @@ module I2C_intrf_FSM (
 
   // state bits
   parameter 
-  Idle          = 5'b00000, 
-  I2C_ReStart   = 5'b00001, 
-  I2C_Start     = 5'b00010, 
-  I2C_Stop      = 5'b00011, 
-  M_Ack_1       = 5'b00100, 
-  M_NAck_1      = 5'b00101, 
-  S_Ack_1       = 5'b00110, 
-  S_Ack_2       = 5'b00111, 
-  S_Ack_3       = 5'b01000, 
-  S_Ack_4       = 5'b01001, 
-  S_Ack_5       = 5'b01010, 
-  Shift_Addr    = 5'b01011, 
-  Shift_Data_Rd = 5'b01100, 
-  Shift_Data_Wr = 5'b01101, 
-  Shift_Dev_Rd  = 5'b01110, 
-  Shift_Dev_Wr  = 5'b01111, 
-  Wait          = 5'b10000; 
+  Idle          = 4'b0000, 
+  I2C_ReStart   = 4'b0001, 
+  I2C_Start     = 4'b0010, 
+  I2C_Stop      = 4'b0011, 
+  M_Ack_1       = 4'b0100, 
+  M_NAck_1      = 4'b0101, 
+  S_Ack_1       = 4'b0110, 
+  S_Ack_2       = 4'b0111, 
+  S_Ack_3       = 4'b1000, 
+  S_Ack_4       = 4'b1001, 
+  S_Ack_5       = 4'b1010, 
+  Shift_Addr    = 4'b1011, 
+  Shift_Data_Rd = 4'b1100, 
+  Shift_Data_Wr = 4'b1101, 
+  Shift_Dev_Rd  = 4'b1110, 
+  Shift_Dev_Wr  = 4'b1111; 
 
-  reg [4:0] state;
+  reg [3:0] state;
 
   assign I2C_STATE = state;
 
-  reg [4:0] nextstate;
+  reg [3:0] nextstate;
 
 
   reg [3:0] shift_cnt;
 
   // comb always block
   always @* begin
-    nextstate = 5'bxxxxx; // default to x because default_state_is_x is set
+    nextstate = 4'bxxxx; // default to x because default_state_is_x is set
     INCR = 0; // default
     case (state)
       Idle         : if      (EXECUTE)                                    nextstate = I2C_Start;
@@ -68,8 +67,8 @@ module I2C_intrf_FSM (
                      else                                                 nextstate = I2C_ReStart;
       I2C_Start    : if      (STEP3)                                      nextstate = Shift_Dev_Wr;
                      else                                                 nextstate = I2C_Start;
-      I2C_Stop     : if      (STEP3)                                      nextstate = Wait;
-//      I2C_Stop     : if      (STEP4)                                      nextstate = Wait; //for simulation kludge
+      I2C_Stop     : if      (STEP3)                                      nextstate = Idle;
+//      I2C_Stop     : if      (STEP4)                                      nextstate = Idle;      // Use with kludge for simulations
                      else                                                 nextstate = I2C_Stop;
       M_Ack_1      : if      (STEP3)                                      nextstate = Shift_Data_Rd;
                      else                                                 nextstate = M_Ack_1;
@@ -108,8 +107,6 @@ module I2C_intrf_FSM (
                      else                                                 nextstate = Shift_Dev_Rd;
       Shift_Dev_Wr : if      ((shift_cnt == 4'd8) && STEP3)               nextstate = S_Ack_1;
                      else                                                 nextstate = Shift_Dev_Wr;
-      Wait         : if      (!EXECUTE)                                   nextstate = Idle;
-                     else                                                 nextstate = Wait;
     endcase
   end
 
@@ -206,7 +203,6 @@ module I2C_intrf_FSM (
                               SHDEVWRT <= 1;
                               shift_cnt <= STEP3 ? shift_cnt + 1 : shift_cnt;
         end
-        Wait         :        READY <= 1;
       endcase
     end
   end
@@ -232,7 +228,6 @@ module I2C_intrf_FSM (
       Shift_Data_Wr: statename = "Shift_Data_Wr";
       Shift_Dev_Rd : statename = "Shift_Dev_Rd";
       Shift_Dev_Wr : statename = "Shift_Dev_Wr";
-      Wait         : statename = "Wait";
       default      : statename = "XXXXXXXXXXXXX";
     endcase
   end
