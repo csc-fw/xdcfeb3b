@@ -2260,6 +2260,7 @@ endgenerate
 		.I2C_START(I2C_start),                 // Start I2C processing
 		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
 		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
+		.I2C_STATUS(I2C_status),               // {wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err}
 		//
 		//
 		.TP_B24_(TP_B24_),

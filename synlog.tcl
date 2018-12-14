@@ -1,2 +1,2 @@
-project -load xdcfeb3a.prj
-run_tcl -fg xdcfeb3a_map.tcl
+project -load xdcfeb3b.prj
+run_tcl -fg xdcfeb3b_map.tcl

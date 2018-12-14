@@ -3,13 +3,13 @@
 #################################################
 ###  SET DESIGN VARIABLES                     ###
 #################################################
-set DesignName  	"xdcfeb3a"
+set DesignName  	"xdcfeb3b"
 set FamilyName  	"VIRTEX6"
 set DeviceName  	"XC6VLX130T"
 set PackageName 	"ff1156"
 set SpeedGrade  	"-1"
-set TopModule   	"xdcfeb3a"
-set EdifFile    	"F:/DCFEB/firmware/ISE_14.7/xdcfeb3a/xdcfeb3a.edn"
+set TopModule   	"xdcfeb3b"
+set EdifFile    	"F:/DCFEB/firmware/ISE_14.7/xdcfeb3b/xdcfeb3b.edn"
 
 #################################################
 ###  SET FLOW                                 ###

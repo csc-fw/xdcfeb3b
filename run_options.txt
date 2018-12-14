@@ -1,7 +1,7 @@
 #--  Synopsys, Inc.
 #--  Version N-2017.09-SP1
-#--  Project file F:\DCFEB\firmware\ISE_14.7\xdcfeb3a\run_options.txt
-#--  Written on Thu Dec 13 15:53:31 2018
+#--  Project file F:\DCFEB\firmware\ISE_14.7\xdcfeb3b\run_options.txt
+#--  Written on Fri Dec 14 15:37:18 2018
 
 
 #project files
@@ -216,14 +216,14 @@ add_file -verilog "../dcfeb3a/ipcore_dir/cmp_tx_vio.v"
 add_file -verilog "../dcfeb3a/ipcore_dir/cmp_tx_la.v"
 add_file -verilog "../dcfeb3a/ipcore_dir/adc_mem_vio.v"
 add_file -verilog "../dcfeb3a/ipcore_dir/adc_cnfg_mem_la.v"
-add_file -verilog "source/xdcfeb3a.v"
+add_file -verilog "source/xdcfeb3b.v"
 add_file -verilog "../dcfeb3a/ipcore_dir/TRG_TX_BUF_BYPASS/example_design/frame_check.v"
-add_file -constraint "F:/DCFEB/firmware/ISE_14.7/xdcfeb3a/xdcfeb3a.sdc"
+add_file -constraint "F:/DCFEB/firmware/ISE_14.7/xdcfeb3b/xdcfeb3b.sdc"
 
 
 
-#implementation: "xdcfeb3a"
-impl -add xdcfeb3a -type fpga
+#implementation: "xdcfeb3b"
+impl -add xdcfeb3b -type fpga
 
 #
 #implementation attributes
@@ -242,7 +242,7 @@ set_option -part_companion ""
 
 #compilation/mapping options
 set_option -use_fsm_explorer 1
-set_option -top_module "xdcfeb3a"
+set_option -top_module "xdcfeb3b"
 
 # hdl_compiler_options
 set_option -distributed_compile 1
@@ -287,7 +287,7 @@ set_option -auto_infer_blackbox 0
 set_option -write_apr_constraint 1
 
 #set result format/file last
-project -result_file "./xdcfeb3a.edn"
+project -result_file "./xdcfeb3b.edn"
 
 #design plan options
-impl -active "xdcfeb3a"
+impl -active "xdcfeb3b"
