@@ -32,7 +32,7 @@ module startup_display #(
 	 // internal outputs
 	 output [15:0] DATA_IN,
 	 // external connections
-    output [15:0] CFG_DAT
+    inout [15:0] CFG_DAT
     );
 
 wire [15:0] data_dir;

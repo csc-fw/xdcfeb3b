@@ -45,8 +45,8 @@ module xdcfeb3b #(
 	input  GBT_RXDATAVALID_FPGA,	//new for xdcfeb_v3a
 	output GBT_TXVD,	            //new for xdcfeb
 	output GBT_TEST_MODE,	      //new for xdcfeb_v3a
-	output [0:15] GBT_RTN_DATA_P, //new for xdcfeb_v3a
-	output [0:15] GBT_RTN_DATA_N, //new for xdcfeb_v3a
+	output [15:0] GBT_RTN_DATA_P, //new for xdcfeb_v3a
+	output [15:0] GBT_RTN_DATA_N, //new for xdcfeb_v3a
 
 	//Calibration signals
 	input \SKW_EXTPLS- ,\SKW_EXTPLS+ ,

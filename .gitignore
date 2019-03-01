@@ -92,10 +92,12 @@ PROM/
 *.wcfg
 *.exe
 *.wdb
+stdout.log.bak.*
 
 ### Other ###
 *~
 *#
 *.jar
 *.edn
+*.edf
 source/xapps/

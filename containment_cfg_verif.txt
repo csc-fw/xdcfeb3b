@@ -214,7 +214,7 @@ xdcfeb3b.adc_data_in1.grp\[1\]\.seg\[0\]\.chan\[0\]\.serdes work deserializer 0
 xdcfeb3b.adc_data_in1 work adc_data_input_gen_csp 0
 xdcfeb3b.bky_intf1 work buckeye_interface 0
 xdcfeb3b.GBT_intf1.GBT_FIFO_readout_FSM_i work GBT_FIFO_readout_FSM 0
-xdcfeb3b.GBT_intf1.GBT_FIFO_i work GBT_FIFO 0
+xdcfeb3b.GBT_intf1.GBT_FIFO_GBT_i work GBT_FIFO 0
 xdcfeb3b.GBT_intf1 work GBT_interface 0
 xdcfeb3b.startup_display_xdcfeb1.Startup_FSM_TMR\.Startup_Display_FSM_i work Startup_Display_FSM_TMR 0
 xdcfeb3b.startup_display_xdcfeb1 work startup_display 0
