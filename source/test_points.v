@@ -52,7 +52,8 @@ module test_points(
 	input I2C_START,                // Start I2C processing
 	input [7:0] I2C_RBK_FIFO_DATA, // Data read back from I2C device
 	input I2C_CLR_START,           // Clear the I2C_START instruction
-	input [7:0] I2C_STATUS,              // {wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err}
+	input I2C_SCOPE_SYNC,          // Scope sync signal
+	input [7:0] I2C_STATUS,        // {wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err}
 	 //
 //	 input SEL_CON_B, // not used
 //	 input SEL_SKW_B, // not used
@@ -102,7 +103,7 @@ assign tp_b26_out = 2'b00;
 //assign tp_b35_out = {SLOW_FIFO_RST,SLOW_FIFO_RST_DONE,AL_START,AL_EXECUTE,2'b0,
 //							AUTO_LOAD,AUTO_LOAD_ENA,CLR_AL_DONE,AL_DONE,AL_BKY_WE,WRT_ON_RST,AL_BK_LD_MT,CLK1MHZ};
 //assign tp_b35_out = {4'b0,2'b0,2'b0,I2C_CLR_START,I2C_RESET,I2C_START,I2C_RDENA,1'b0,I2C_WE};
-assign tp_b35_out = {I2C_CLR_START,I2C_RESET,I2C_START,I2C_RDENA,2'b0,I2C_STATUS};
+assign tp_b35_out = {I2C_RDENA,I2C_CLR_START,I2C_SCOPE_SYNC,I2C_START,2'b0,I2C_STATUS};
 //
 // Incoming data to fabric
 //

@@ -30,8 +30,8 @@ module xdcfeb3b #(
 //	parameter Strt_dly = 20'h00000,
 //	parameter POR_tmo = 7'd10,
 //	parameter ADC_Init_tmo = 12'd1, 
-	parameter TMR = 1,
-	parameter TMR_Err_Det = 1
+	parameter TMR = 0,
+	parameter TMR_Err_Det = 0
 	)(
 
 	//Clocks
@@ -186,6 +186,8 @@ module xdcfeb3b #(
 	wire [35:0] param_xfer_viord_c1;
 	wire [35:0] param_xfer_la0_c2;
 
+	wire [35:0] null_36;
+	assign null_36 = 36'h000000000;
 
 generate
 if(USE_PARAM_XFER_CHIPSCOPE==1) 
@@ -317,8 +319,8 @@ CSP_comp_daq_cntrl cmp_daq_cntrl1 (
     .CONTROL3(DAQ_tx_vio_c3), // INOUT BUS [35:0]
     .CONTROL4(DAQ_tx_la_c4), // INOUT BUS [35:0]
     .CONTROL5(rd_fifo2_la_c5), // INOUT BUS [35:0]
-    .CONTROL6(36'h000000000), // INOUT BUS [35:0] //bpi_vio_c6 in DCFEBs
-    .CONTROL7(36'h000000000), // INOUT BUS [35:0] //bpi_la_c7  in DCFEBs
+    .CONTROL6(null_36), // INOUT BUS [35:0] //bpi_vio_c6 in DCFEBs
+    .CONTROL7(null_36), // INOUT BUS [35:0] //bpi_la_c7  in DCFEBs
     .CONTROL8(cmp_tx_vio_c0), // INOUT BUS [35:0]
     .CONTROL9(cmp_tx_la_c1)  // INOUT BUS [35:0]
 );
@@ -377,8 +379,8 @@ CSP_daq_cntrl daq_cntrl1 (
     .CONTROL3(DAQ_tx_vio_c3), // INOUT BUS [35:0]
     .CONTROL4(DAQ_tx_la_c4), // INOUT BUS [35:0]
     .CONTROL5(rd_fifo2_la_c5), // INOUT BUS [35:0]
-    .CONTROL6(36'h000000000), // INOUT BUS [35:0] //bpi_vio_c6 in DCFEBs
-    .CONTROL7(36'h000000000) // INOUT BUS [35:0]  //bpi_la_c7  in DCFEBs
+    .CONTROL6(null_36), // INOUT BUS [35:0] //bpi_vio_c6 in DCFEBs
+    .CONTROL7(null_36) // INOUT BUS [35:0]  //bpi_la_c7  in DCFEBs
 );
 
 	assign cmp_tx_vio_c0 = 36'h000000000;
@@ -784,6 +786,7 @@ wire al_restart;
 wire load_dflt;
 wire slow_fifo_rst;
 wire slow_fifo_rst_done;
+wire al_vttx_regs;
 
 assign csp_al_start = 1'b0;
 assign al_start = por_al_start | csp_al_start;
@@ -1809,10 +1812,12 @@ wire I2C_start;
 wire I2C_clr_start;
 wire [7:0] I2C_rbk_fifo_data;
 wire [7:0] I2C_status;
+wire I2C_scope_sync;
 
 	I2C_interfaces #(
 		.Simulation(Simulation),
-		.USE_CHIPSCOPE(USE_I2C_CHIPSCOPE)
+		.USE_CHIPSCOPE(USE_I2C_CHIPSCOPE),
+		.Hard_Code_Defaults(1)
 	) 
 	I2C_intf1 (
 		.CLK40(clk40),
@@ -1831,6 +1836,10 @@ wire [7:0] I2C_status;
 		.NVIO_SDA_25(NVIO_SDA_25),
 		.NVIO_SCL_25(NVIO_SCL_25),
 		
+	// AutoLoad signals
+	// inputs
+		.AL_DATA(xcf08p_rbk_fifo_data[7:0]), // Data from XCF08 FIFO for auto-loading
+		.AL_VTTX_REGS(al_vttx_regs),
 	// JTAG signals
 	// inputs
 		.I2C_WRT_FIFO_DATA(I2C_wrt_fifo_data), // Data word for I2C write FIFO
@@ -1841,6 +1850,7 @@ wire [7:0] I2C_status;
 	// outputs
 		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
 		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
+		.I2C_SCOPE_SYNC(I2C_scope_sync),       // Scope sync signal
 		.I2C_STATUS(I2C_status)                // STATUS word for I2C interface
 	);
 
@@ -2084,6 +2094,7 @@ endgenerate
 		.I2C_RDENA(I2C_rdena),                  // Read enable for I2C Readback FIFO
 		.I2C_RESET(I2C_reset),                  // Reset I2C FIFO
 		.I2C_START(I2C_start),                  // Start I2C processing
+		.AL_VTTX_REGS(al_vttx_regs),            // Signal to load autoload constants for the VTTX registers (reg0 to reg6)
 // inputs
 		.SEM_FAR_PA(sem_far_pa),                //Frame Address Register - Physical Address
 		.SEM_FAR_LA(sem_far_la),                //Frame Address Register - Linear Address
@@ -2260,6 +2271,7 @@ endgenerate
 		.I2C_START(I2C_start),                 // Start I2C processing
 		.I2C_RBK_FIFO_DATA(I2C_rbk_fifo_data), // Data read back from I2C device
 		.I2C_CLR_START(I2C_clr_start),         // Clear the I2C_START instruction
+		.I2C_SCOPE_SYNC(I2C_scope_sync),       // Scope sync signal
 		.I2C_STATUS(I2C_status),               // {wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err}
 		//
 		//

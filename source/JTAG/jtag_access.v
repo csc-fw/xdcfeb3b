@@ -194,6 +194,7 @@ module jtag_access #(
 	 output reg I2C_RDENA,            // Read enable for I2C Readback FIFO
 	 output I2C_RESET,                // Reset I2C FIFO
 	 output I2C_START,                // Start I2C processing
+	 output AL_VTTX_REGS,             // Signal to load autoload constants for the VTTX registers (reg0 to reg6)
 	 input [23:0] SEM_FAR_PA,    //Frame Address Register - Physical Address
 	 input [23:0] SEM_FAR_LA,    //Frame Address Register - Linear Address
 	 input [15:0] SEM_ERRCNT,    //Error counters - {dbl,sngl} 8 bits each
@@ -420,6 +421,7 @@ module jtag_access #(
 	assign al_samp_clk_phase = AUTO_LOAD & (AL_CNT == 6'h05);
 	assign al_nsamp          = AUTO_LOAD & (AL_CNT == 6'h06);
 	assign al_pdepth         = AUTO_LOAD & (AL_CNT == 6'h07);
+	assign AL_VTTX_REGS      = AUTO_LOAD & ((AL_CNT >= 6'h08) && (AL_CNT <= 6'h0E));
 	assign al_bky_shift      = AUTO_LOAD & ((AL_CNT >= 6'h10) && (AL_CNT <= 6'h21));
 	
  /////////////////////////////////////////////////////////////////////////////

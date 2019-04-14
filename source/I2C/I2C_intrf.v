@@ -59,7 +59,7 @@ wire shift_dev_wrt;
 wire start;
 wire stop;
 wire slave_ack;
-wire [4:0] I2C_state;
+wire [3:0] I2C_state;
 
 wire last_byte;
 wire my_execute;

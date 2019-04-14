@@ -20,7 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 module I2C_interfaces #(
 	parameter Simulation = 0,
-	parameter USE_CHIPSCOPE = 0
+	parameter USE_CHIPSCOPE = 0,
+	parameter Hard_Code_Defaults = 0
 )(
 	input	CLK40,
 	input	CLK1MHZ,
@@ -37,7 +38,12 @@ module I2C_interfaces #(
 	output NVIO_I2C_EN,
 	inout NVIO_SDA_25,
 	output NVIO_SCL_25,
-	
+			
+	// AutoLoad signals
+	// inputs
+	input [7:0] AL_DATA, // Data from XCF08 FIFO for auto-loading
+	input AL_VTTX_REGS,
+
 	// JTAG signals
 	input [7:0] I2C_WRT_FIFO_DATA,  // Data word for I2C write FIFO
 	input I2C_WE,               // Write enable for I2C Write FIFO
@@ -47,6 +53,7 @@ module I2C_interfaces #(
 
 	output [7:0] I2C_RBK_FIFO_DATA, // Data read back from I2C device
 	output I2C_CLR_START,           // Clear the I2C_START instruction
+	output I2C_SCOPE_SYNC,          // Scope sync signal
 	output [7:0] I2C_STATUS         // STATUS word for I2C interface
 	
 );
@@ -101,12 +108,17 @@ wire wrt_full;
 wire wrt_empty;
 wire rd_full;
 wire rd_empty;
+wire al_full;
+wire al_empty;
 wire read_ff;
+wire al_rena;
 wire load_dev;
 wire load_n_byte;
 wire load_addr;
 wire wrt_ena;
 wire [7:0] ff_dout;
+wire [7:0] al_dout;
+wire [7:0] gen_data;
 reg [3:0] n_bytes;
 reg I2C_read;
 wire execute;
@@ -141,6 +153,23 @@ reg  trg_sel;
 reg  daq_sel;
 reg  nvio_sel;
 
+
+// signal for I2C auto loading
+
+reg  [3:0] rom_addr;
+reg  [7:0] tdata;
+reg  [7:0] sdata;
+wire use_al_data;
+wire rst_rom_addr;
+wire clr_addr;
+wire start_parser;
+wire empty_parser;
+wire start_al;
+reg  al_vttx_1;
+reg  al_vttx_2;
+wire al_data_rdy;
+wire al_i2c_sync;
+
 assign clr_wrt_addr = RST || load_addr;
 assign gbl_ready = (daq_sel || trg_sel || nvio_sel) && ((!daq_sel || (daq_sel && daq_ready)) && (!trg_sel || (trg_sel && trg_ready)) && (!nvio_sel || (nvio_sel && nvio_ready)));
 assign rbk_data  =  daq_sel ? daq_rbk_data : (trg_sel ? trg_rbk_data : (nvio_sel ? nvio_rbk_data : 8'h00));
@@ -149,6 +178,8 @@ assign rbk_we    =  daq_sel ? daq_rbk_we   : (trg_sel ? trg_rbk_we   : (nvio_sel
 assign rst_fifo = RST || I2C_RESET;
 
 assign I2C_STATUS ={wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err};
+
+assign I2C_SYNC = al_i2c_sync | I2C_START;
 
 generate
 if(Simulation==1)
@@ -219,7 +250,7 @@ end
 else
 begin : builtin_I2C_FIFOs
 
-I2C_write_FIFO
+I2C_FIFO_8bit
 I2C_write_FIFO_i (
   .clk(CLK40), // input clk
   .rst(rst_fifo), // input rst
@@ -231,7 +262,7 @@ I2C_write_FIFO_i (
   .empty(wrt_empty) // output empty
 );
 
-I2C_rbk_FIFO
+I2C_FIFO_8bit
 I2C_rbk_FIFO_i (
   .clk(CLK40), // input clk
   .rst(rst_fifo), // input rst
@@ -242,7 +273,19 @@ I2C_rbk_FIFO_i (
   .full(rd_full), // output full
   .empty(rd_empty) // output empty
 );
-	
+
+I2C_FIFO_8bit
+I2C_AutoLoad_FIFO_i (
+  .clk(CLK40), // input clk
+  .rst(rst_fifo), // input rst
+  .din(AL_DATA), // input [7 : 0] din
+  .wr_en(AL_VTTX_REGS), // input wr_en
+  .rd_en(al_rena), // input rd_en
+  .dout(al_dout), // output [7 : 0] dout
+  .full(al_full), // output full
+  .empty(al_empty) // output empty
+);
+
 end
 endgenerate
 
@@ -268,6 +311,9 @@ always @(posedge CLK40 or posedge rst_fifo) begin
 			trg_sel  <= ff_dout[2];
 			daq_sel  <= ff_dout[1];
 			nvio_sel <= ff_dout[0];
+			trg_sel  <= gen_data[2];
+			daq_sel  <= gen_data[1];
+			nvio_sel <= gen_data[0];
 		end
 	end
 end
@@ -279,8 +325,8 @@ always @(posedge CLK40 or posedge rst_fifo) begin
 	end
 	else begin
 		if(load_n_byte) begin
-			n_bytes <= ff_dout[7:4];
-			I2C_read <= ff_dout[3];
+			n_bytes <= gen_data[7:4];
+			I2C_read <= gen_data[3];
 		end
 	end
 end
@@ -299,8 +345,8 @@ I2C_parser_i (
 	.I2C_PARSER_STATE(I2C_parser_state),
    // inputs
 	.CLK(CLK40),
-	.I2C_START(I2C_START),
-	.MT(wrt_empty),
+	.I2C_START(start_parser),
+	.MT(empty_parser),
 	.N_BYTES(n_bytes),
 	.READ(I2C_read),
 	.READY(gbl_ready),
@@ -399,6 +445,86 @@ I2C_NVIO_i  (
 //	.TRISTATE_SDA(nvio_tristate_sda),
 	.SCL(nvio_scl_25_out),
 	.SDA(nvio_sda_25_out)
+);
+
+//
+// code for auto loading constants to VTTX I2C communications
+//
+
+assign rst_rom_addr   = RST || clr_addr;
+assign gen_data       = use_al_data ? sdata : ff_dout;
+assign start_parser   = use_al_data ? start_al : I2C_START;
+assign empty_parser   = use_al_data ? 1'b0 : wrt_empty;
+
+assign al_rena = (rom_addr >= 4'd2) && (rom_addr <= 4'd8);
+
+generate
+if(Hard_Code_Defaults==1)
+begin: Hrd_cd
+	always @* begin
+		sdata = tdata;
+	end
+end
+else
+begin: Al_assigned_data
+	always @*
+	begin: i2c_data_mux
+		case(rom_addr)
+			4'd0: sdata = tdata;
+			4'd1: sdata = tdata;
+			4'd2, 4'd3, 4'd4, 4'd5, 4'd6, 4'd7, 4'd8: 
+					sdata = al_dout;
+			default: sdata = 8'h00;
+		endcase
+	end
+end
+endgenerate
+
+always @*
+begin: I2C_ROM
+   case(rom_addr)
+      4'd0: tdata = 8'h76; // n_bytes 7, write, DAQ & TRG
+      4'd1: tdata = 8'h00; // Register address
+      4'd2: tdata = 8'h87; // Default data for reg 0
+      4'd3: tdata = 8'h99; // Default data for reg 1
+      4'd4: tdata = 8'h19; // Default data for reg 2
+      4'd5: tdata = 8'h88; // Default data for reg 3
+      4'd6: tdata = 8'hFF; // Default data for reg 4
+      4'd7: tdata = 8'hFF; // Default data for reg 5
+      4'd8: tdata = 8'h04; // Default data for reg 6
+      default: tdata = 8'h00;
+   endcase
+end
+
+always @(posedge CLK40 or posedge rst_rom_addr) begin
+	if(rst_rom_addr) begin
+		rom_addr <= 4'h0;
+	end
+	else begin
+		if(read_ff) begin
+			rom_addr <= rom_addr +1;
+		end
+	end
+end
+
+always @(posedge CLK40) begin
+	al_vttx_1 <= AL_VTTX_REGS;
+	al_vttx_2 <= al_vttx_1;
+end
+
+assign al_data_rdy = ~AL_VTTX_REGS & al_vttx_2;
+
+Auto_Load_I2C_FSM (
+	// outputs
+	.CLR_ADDR(clr_addr),
+	.START_AL(start_al),
+	.SYNC(al_i2c_sync),
+	.USE_AL_DATA(use_al_data),
+	// inputs
+	.AL_DATA_RDY(al_data_rdy),
+	.CLK(CLK40),
+	.RST(rst_fifo),
+	.SEQ_DONE(I2C_CLR_START)
 );
 
 always @(posedge CLK40 or posedge RST) begin
