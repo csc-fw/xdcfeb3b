@@ -179,7 +179,7 @@ assign rst_fifo = RST || I2C_RESET;
 
 assign I2C_STATUS ={wrt_full, wrt_empty, rd_full, rd_empty, 1'b0, nvio_nack_err, trg_nack_err, daq_nack_err};
 
-assign I2C_SYNC = al_i2c_sync | I2C_START;
+assign I2C_SCOPE_SYNC = al_i2c_sync | I2C_START;
 
 generate
 if(Simulation==1)
@@ -245,6 +245,37 @@ begin : Sim_I2C_FIFOs
 	assign I2C_RBK_FIFO_DATA = I2C_rbk_fifo[I2C_rbk_raddr];
 	assign rd_full    = (I2C_rbk_waddr-I2C_rbk_raddr)==5'h1F;
 	assign rd_empty   = I2C_rbk_waddr==I2C_rbk_raddr;
+	
+	// I2C autoload FIFO
+	reg [4:0] I2C_al_waddr;
+	reg [4:0] I2C_al_raddr;
+	reg [7:0] I2C_al_fifo [31:0];
+	
+	always @(posedge CLK40 or posedge rst_fifo) begin
+		if(rst_fifo) begin
+			I2C_al_waddr <= 5'h00;
+		end
+		else
+			if(AL_VTTX_REGS) begin
+				I2C_al_waddr <= I2C_al_waddr + 1;
+			end
+	end
+	always @(posedge CLK40) begin
+		if(AL_VTTX_REGS) I2C_al_fifo[I2C_al_waddr] <= AL_DATA;
+	end
+	
+	always @(posedge CLK40 or posedge rst_fifo) begin
+		if(rst_fifo) begin
+			I2C_al_raddr <= 5'h00;
+		end
+		else
+			if (I2C_RDENA) begin
+				I2C_al_raddr <= I2C_al_raddr + 1;
+			end
+	end
+	assign al_dout    = I2C_al_fifo[I2C_al_raddr];
+	assign al_full    = (I2C_al_waddr-I2C_al_raddr)==5'h1F;
+	assign al_empty   = I2C_al_waddr==I2C_al_raddr;
 	
 end
 else
@@ -371,7 +402,7 @@ I2C_TRG_LD_i  (
 	.LOAD_N_BYTE(load_n_byte),
 	.LOAD_ADDR(load_addr),
 	.WRT_ADDR(wrt_addr),
-	.WRT_DATA(ff_dout),
+	.WRT_DATA(gen_data),
 	.WRT_ENA(wrt_ena),
 	.EXECUTE(execute),
 	//Outputs
@@ -402,7 +433,7 @@ I2C_DAQ_LD_i  (
 	.LOAD_N_BYTE(load_n_byte),
 	.LOAD_ADDR(load_addr),
 	.WRT_ADDR(wrt_addr),
-	.WRT_DATA(ff_dout),
+	.WRT_DATA(gen_data),
 	.WRT_ENA(wrt_ena),
 	.EXECUTE(execute),
 	//Outputs
@@ -434,7 +465,7 @@ I2C_NVIO_i  (
 	.LOAD_N_BYTE(load_n_byte),
 	.LOAD_ADDR(load_addr),
 	.WRT_ADDR(wrt_addr),
-	.WRT_DATA(ff_dout),
+	.WRT_DATA(gen_data),
 	.WRT_ENA(wrt_ena),
 	.EXECUTE(execute),
 	//Outputs
@@ -514,7 +545,8 @@ end
 
 assign al_data_rdy = ~AL_VTTX_REGS & al_vttx_2;
 
-Auto_Load_I2C_FSM (
+Auto_Load_I2C_FSM 
+AL_I2C_FSM_i (
 	// outputs
 	.CLR_ADDR(clr_addr),
 	.START_AL(start_al),
