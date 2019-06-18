@@ -1016,6 +1016,7 @@ wire [15:0] gbt_data_in;
 		.G6LCLK0N(G6LCLK0N),.G6LCLK0P(G6LCLK0P),
 		.G6LCLK1N(G6LCLK1N),.G6LCLK1P(G6LCLK1P),
 	   // Clocks and Resets
+		.CLK20(clk20),
 		.RST(dsr_rst),
 		.SYS_RST(sys_rst),
 		.DSR_RESYNC(dsr_resync),
