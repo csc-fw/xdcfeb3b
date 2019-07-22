@@ -13,8 +13,8 @@ module xdcfeb3b #(
 	parameter USE_CHAN_LINK_CHIPSCOPE = 0,
 	parameter USE_DESER_CHIPSCOPE = 0,
 	parameter USE_CMP_CHIPSCOPE = 0,
-	parameter USE_DAQ_CHIPSCOPE = 0,
-	parameter USE_RINGBUF_CHIPSCOPE = 0,
+	parameter USE_DAQ_CHIPSCOPE = 1,
+	parameter USE_RINGBUF_CHIPSCOPE = 1,
 	parameter USE_FF_EMU_CHIPSCOPE = 0,
 	parameter USE_SPI_CHIPSCOPE = 0,
 	parameter USE_PIPE_CHIPSCOPE = 0,
@@ -2161,7 +2161,7 @@ wire [1:0] spr2;
 wire spr1;
 
 generate
-if(USE_DAQ_CHIPSCOPE==1 || USE_DESER_CHIPSCOPE==1)
+if((USE_DAQ_CHIPSCOPE==1 || USE_DESER_CHIPSCOPE==1) && USE_RINGBUF_CHIPSCOPE==0)
 begin
 
 /////////////////////////////////////////////////////////////////////////////
