@@ -51,6 +51,7 @@ xdcfeb3b.rsm_xdcfeb1.RSTman_FSMs_TMR\.SLOW_FIFO_Rst_FSM_i work FIFO_Rst_FSM_TMR 
 xdcfeb3b.rsm_xdcfeb1.RSTman_FSMs_TMR\.DAQ_FIFO_Rst_FSM_i work FIFO_Rst_FSM_TMR 0
 xdcfeb3b.rsm_xdcfeb1.RSTman_FSMs_TMR\.POW_on_Reset_FSM_xdcfeb_i work Pow_on_Rst_FSM_TMR 0
 xdcfeb3b.rsm_xdcfeb1 work reset_manager 0
+xdcfeb3b.I2C_intf1.AL_I2C_FSM_i work Auto_Load_I2C_FSM 0
 xdcfeb3b.I2C_intf1.I2C_NVIO_i.I2C_intrf_i work I2C_intrf_FSM 0
 xdcfeb3b.I2C_intf1.I2C_NVIO_i work I2C_intrf 0
 xdcfeb3b.I2C_intf1.I2C_DAQ_LD_i.I2C_intrf_i work I2C_intrf_FSM 0
@@ -58,8 +59,9 @@ xdcfeb3b.I2C_intf1.I2C_DAQ_LD_i work I2C_intrf 0
 xdcfeb3b.I2C_intf1.I2C_TRG_LD_i.I2C_intrf_i work I2C_intrf_FSM 0
 xdcfeb3b.I2C_intf1.I2C_TRG_LD_i work I2C_intrf 0
 xdcfeb3b.I2C_intf1.I2C_parser_i work I2C_cmd_parser_FSM 0
-xdcfeb3b.I2C_intf1.builtin_I2C_FIFOs\.I2C_rbk_FIFO_i work I2C_rbk_FIFO 0
-xdcfeb3b.I2C_intf1.builtin_I2C_FIFOs\.I2C_write_FIFO_i work I2C_write_FIFO 0
+xdcfeb3b.I2C_intf1.builtin_I2C_FIFOs\.I2C_AutoLoad_FIFO_i work I2C_FIFO_8bit 0
+xdcfeb3b.I2C_intf1.builtin_I2C_FIFOs\.I2C_rbk_FIFO_i work I2C_FIFO_8bit 0
+xdcfeb3b.I2C_intf1.builtin_I2C_FIFOs\.I2C_write_FIFO_i work I2C_FIFO_8bit 0
 xdcfeb3b.I2C_intf1 work I2C_interfaces 0
 xdcfeb3b.SPI_PORT_i work spi_port 0
 xdcfeb3b.tmb_fiber_out1.tx1.PRBS_logic_TMR\.tx_lfsr1 work lfsr_R24 0
