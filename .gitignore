@@ -21,6 +21,7 @@ isim/
 planAhead_*
 isim/
 PROM/
+source/PROM/tmp
 *.tlg
 *.szr
 *.prs
